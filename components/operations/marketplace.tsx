@@ -1,4 +1,7 @@
 'use client';
+import { periodRange } from '@/lib/operations/engine';
+import { thresholds } from '@/lib/operations/config';
+import { usePeriod, PeriodControl } from '@/components/workflows/primitives';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Upload, ArrowUpRight } from 'lucide-react';
@@ -11,8 +14,10 @@ import { EmptyState } from './shared';
 export function MarketplacePage({ market }: { market: 'TikTok' | 'Shopee' }) {
   const { data } = useWorkspace();
   const [tab, setTab] = useState('Overview');
+  const {mode,setMode,custom,setCustom}=usePeriod();
+  const period=periodRange(mode,new Date(),thresholds(data).cutoff_days,custom);
   const tt = market === 'TikTok';
-  const rows = tt ? data.tiktok_performance : data.shopee_performance;
+  const rows = (tt ? data.tiktok_performance : data.shopee_performance).filter(r=>r.date>=period.start&&r.date<=period.end);
   const accounts = tt ? data.tiktok_accounts : data.shopee_accounts;
   const ranks = accounts
     .map((a) => ({
@@ -37,10 +42,10 @@ export function MarketplacePage({ market }: { market: 'TikTok' | 'Shopee' }) {
       <div className="panel-heading">
         <div>
           <h2>{market} GMV trend</h2>
-          <p>Daily performance · September 2026</p>
+          <p>Daily performance · {period.start} — {period.end}</p>
         </div>
       </div>
-      <TrendChart market={market} />
+      <TrendChart market={market} period={period} days={366} />
     </section>
   );
   return (
@@ -65,6 +70,7 @@ export function MarketplacePage({ market }: { market: 'TikTok' | 'Shopee' }) {
           Import {market} data
         </Link>
       </div>
+      <PeriodControl mode={mode} onMode={setMode} custom={custom} onCustom={setCustom} period={period}/>
       <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
         <TabsList variant="line" className="tabs-nav w-full justify-start">
           {tabs.map((t) => (
@@ -85,7 +91,7 @@ export function MarketplacePage({ market }: { market: 'TikTok' | 'Shopee' }) {
               {
                 label: tt ? 'Content published' : 'Products sold',
                 value: tt
-                  ? data.tiktok_performance.reduce(
+                  ? data.tiktok_performance.filter(r=>r.date>=period.start&&r.date<=period.end).reduce(
                       (s, p) => s + p.video_count,
                       0,
                     )

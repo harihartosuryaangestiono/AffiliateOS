@@ -77,7 +77,9 @@ export function EmptyState({
   return (
     <Empty className="empty-state">
       <EmptyHeader>
-        <FolderOpen className="mx-auto mb-3 text-neutral-400" size={28} />
+        <span className="empty-symbol">
+          <FolderOpen size={26} />
+        </span>
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>

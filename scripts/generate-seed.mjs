@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import ts from 'typescript';
-const source = (await fs.readFile(new URL('../lib/data/seed.ts',import.meta.url),'utf8')).replace('@/types/domain',new URL('../types/domain.ts',import.meta.url).href);
+const source = (await fs.readFile(new URL('../lib/data/seed.ts',import.meta.url),'utf8')).replace('../../types/domain.ts',new URL('../types/domain.ts',import.meta.url).href);
 const javascript = ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
 const {seed}=await import('data:text/javascript;base64,'+Buffer.from(javascript).toString('base64'));
 const scope="current_setting('affiliateos.seed_workspace')::uuid";

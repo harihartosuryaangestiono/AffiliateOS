@@ -1,4 +1,2 @@
-import { Dashboard } from '@/components/dashboard/dashboard';
-export default function Page() {
-  return <Dashboard />;
-}
+import { PerformanceOverview } from '@/components/workflows/workspace';
+export default function Page(){return <PerformanceOverview dashboard />;}

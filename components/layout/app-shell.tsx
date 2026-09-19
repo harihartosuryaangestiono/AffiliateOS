@@ -3,6 +3,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  MessageCircle, CalendarDays,
   LayoutDashboard,
   Building2,
   Layers,
@@ -53,40 +54,17 @@ const groups: {
   name: string;
   items: [string, string, typeof LayoutDashboard][];
 }[] = [
-  { name: 'WORKSPACE', items: [['Dashboard', 'dashboard', LayoutDashboard]] },
-  {
-    name: 'OPERATIONS',
-    items: [
-      ['Clients', 'clients', Building2],
-      ['Brands', 'brands', Layers],
-      ['Campaigns', 'campaigns', Flag],
-      ['Creators', 'creators', Users],
-      ['Products', 'products', Package],
-    ],
-  },
-  {
-    name: 'MARKETPLACE',
-    items: [
-      ['TikTok', 'tiktok', Music2],
-      ['Shopee', 'shopee', ShoppingBag],
-    ],
-  },
-  {
-    name: 'DATA & PRODUCTIVITY',
-    items: [
-      ['Import Center', 'imports', Upload],
-      ['Tasks', 'tasks', CheckSquare],
-      ['Reports', 'reports', ChartNoAxesCombined],
-    ],
-  },
-  {
-    name: 'SYSTEM',
-    items: [
-      ['Users', 'users', Users],
-      ['Settings', 'settings', Settings],
-    ],
-  },
+ {name:'WORKSPACE',items:[['Dashboard','dashboard',LayoutDashboard],['My Work','my-work',CheckSquare]]},
+ {name:'PERFORMANCE',items:[['Overview','performance',ChartNoAxesCombined],['TikTok','tiktok',Music2],['Shopee','shopee',ShoppingBag]]},
+ {name:'CREATORS',items:[['Creator Database','creators',Users],['Acquisition','creators/acquisition',Plus],['Outreach','creators/outreach',MessageCircle],['Performance Watch','creators/performance',ChartNoAxesCombined]]},
+ {name:'ACTIVATIONS',items:[['Campaigns','campaigns',Flag],['HSL','hsl',Layers],['Peak Days','peak-days',CalendarDays],['Samples','samples',Package]]},
+ {name:'DATA',items:[['Import Center','imports',Upload],['Products','products',Package]]},
+ {name:'REPORTING',items:[['Weekly Reports','reports',ChartNoAxesCombined],['Monthly Reports','reports/monthly',CalendarDays]]},
+ {name:'MANAGEMENT',items:[['Clients','clients',Building2],['Brands','brands',Layers],['Tasks','tasks',CheckSquare]]},
+ {name:'SYSTEM',items:[['Users','users',Users],['Settings','settings',Settings]]},
 ];
+const quickActions=[['Creator','/creators?create=1'],['Campaign','/campaigns?create=1'],['Task','/tasks?create=1'],['Sample','/samples?create=1'],['HSL Activation','/hsl?create=1'],['Peak Day','/peak-days?create=1'],['Stock Update','/hsl/stock?create=1']];
+
 export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const router = useRouter();
@@ -97,6 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     demo,
   );
   const [search, setSearch] = useState(false);
+  const [quick, setQuick] = useState(false);
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -144,7 +123,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <SidebarMenuItem key={url}>
                     <SidebarMenuButton
                       render={<Link href={'/' + url} />}
-                      isActive={path.startsWith('/' + url)}
+                      isActive={path === '/' + url || (path.startsWith('/' + url + '/') && !groups.flatMap(g=>g.items).some(i=>i[1]!==url && path === '/'+i[1]))}
                       tooltip={label}
                     >
                       <Icon />
@@ -168,7 +147,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SidebarFooter>
           <div className="phase-note">
             <span className="green-dot" />
-            All systems organized<span className="text-xs">Phase 1</span>
+            Daily operations<span className="text-xs">Phase 1.5</span>
           </div>
           <Link href="/settings?tab=profile" className="profile-button">
             <span className="avatar">{initials(name)}</span>
@@ -182,7 +161,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Sidebar>
       <SidebarInset className="workspace-main">
         <header className="topbar">
-          <div className="flex items-center gap-3">
+          <button className="search-trigger" onClick={() => setSearch(true)}>
+            <Search size={15} />
+            <span>Search creators, campaigns, brands, or anything…</span>
+            <kbd>⌘ K</kbd>
+          </button>
+          <div className="topbar-context flex items-center gap-3">
             <SidebarTrigger className="text-neutral-400" />
             <span className="breadcrumb-muted">Workspace</span>
             <span className="text-neutral-300">/</span>
@@ -190,11 +174,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             {demo && <span className="demo-badge">Demo workspace</span>}
           </div>
           <div className="flex items-center gap-4">
-            <button className="search-trigger" onClick={() => setSearch(true)}>
-              <Search size={15} />
-              <span>Search anything...</span>
-              <kbd>⌘ K</kbd>
-            </button>
             <span className="topbar-divider" />
             <Link
               href="/tasks"
@@ -207,11 +186,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Button
               disabled={!canEdit('campaigns')}
               className="quick-create"
-              onClick={() => router.push('/campaigns?create=1')}
+              onClick={() => setQuick(!quick)}
             >
               <Plus size={15} />
               Quick create
             </Button>
+            {quick && <div className="ops-quick-menu">{quickActions.map(([label,url])=><Link key={url} href={url} onClick={()=>setQuick(false)}>+ {label}</Link>)}</div>}
           </div>
         </header>
         <main className="page-content">{children}</main>
@@ -236,6 +216,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <CommandInput placeholder="Search your workspace..." />
           <CommandList>
             <CommandEmpty>No matching records found.</CommandEmpty>
+            <CommandGroup heading="Actions">{[...quickActions.map(([label,url])=>["Create "+label,url]),["Open HSL","/hsl"],["Open Peak Days","/peak-days"],["Import Shopee Data","/imports/shopee"],["Import TikTok Data","/imports/tiktok"]].map(([label,url])=><CommandItem key={url} value={label} onSelect={()=>{setSearch(false);router.push(url);}}>{label}</CommandItem>)}</CommandGroup>
             {Object.entries(data.entities)
               .filter(([k]) => k !== 'tasks')
               .map(([entity, rows]) => (

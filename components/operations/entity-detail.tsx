@@ -1,4 +1,8 @@
 'use client';
+import { ProductPerformance } from '@/components/workflows/workspace';
+import { useSearchParams } from 'next/navigation';
+import { ActivationTable, CreatorQuickActions, Outreach, PerformanceWatch } from '@/components/workflows/creators';
+import { HSL, Samples } from '@/components/workflows/activations';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Pencil } from 'lucide-react';
@@ -22,10 +26,11 @@ import type { Entity, Account } from '@/types/domain';
 import { PlatformIcon } from '@/components/dashboard/dashboard';
 import { toast } from 'sonner';
 export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
+  const searchParams = useSearchParams();
   const { data, setData, demo, canEdit } = useWorkspace();
   const record = data.entities[entity].find((r) => r.id === id);
   const [edit, setEdit] = useState(false),
-    [tab, setTab] = useState('Overview'),
+    [tab, setTab] = useState(searchParams.get('tab') || 'Overview'),
     [account, setAccount] = useState<'TikTok' | 'Shopee' | null>(null),
     [username, setUsername] = useState(''),
     [followers, setFollowers] = useState('0'),
@@ -49,6 +54,7 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
         ? [
             'Overview',
             'Creators',
+            'Creator Activation',
             'Products',
             'Content',
             'Performance',
@@ -62,6 +68,7 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
               'TikTok',
               'Shopee',
               'Campaigns',
+              'HSL', 'Samples', 'Outreach',
               'Content',
               'Performance',
               'Notes',
@@ -233,6 +240,7 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
           </Button>
         )}
       </div>
+      {entity === 'creators' && <CreatorQuickActions id={id} />}
       <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
         <TabsList variant="line" className="tabs-nav w-full justify-start">
           {tabs.map((t) => (
@@ -241,7 +249,13 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
             </TabsTrigger>
           ))}
         </TabsList>
+        {tab === 'Creator Activation' && <TabsContent value={tab}><ActivationTable campaignId={id}/></TabsContent>}
+        {entity === 'creators' && tab === 'HSL' && <TabsContent value={tab}><HSL creatorId={id}/></TabsContent>}
+        {entity === 'creators' && tab === 'Samples' && <TabsContent value={tab}><Samples creatorId={id}/></TabsContent>}
+        {entity === 'creators' && tab === 'Outreach' && <TabsContent value={tab}><Outreach creatorId={id}/></TabsContent>}
+
         <TabsContent value="Overview">
+          {entity === "products" && <ProductPerformance id={id}/>}
           <div className="detail-grid mb-5">
             <section className="panel detail-panel">
               <h2>{config[entity].singular} information</h2>
@@ -289,7 +303,7 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
           {['clients', 'campaigns', 'creators', 'brands'].includes(entity) &&
             performance}
         </TabsContent>
-        <TabsContent value="Performance">{performance}</TabsContent>
+        <TabsContent value="Performance">{entity === "creators" ? <PerformanceWatch creatorId={id}/> : performance}</TabsContent>
         <TabsContent value="Brands">
           <EntityTable
             entity="brands"

@@ -1,10 +1,12 @@
+import { fileFingerprint, normalizeReport } from '@/lib/imports/normalize';
+import { loadWorkspace } from '@/lib/queries/workspace';
 import { readReport } from '@/lib/imports/read-file';
 import { identity } from '@/lib/supabase/server';
 import { validateRows } from '@/lib/imports/validation';
 export async function POST(req: Request) {
   try {
     const { db, profile } = await identity();
-    if (!['Admin', 'Affiliate Manager'].includes(profile.role))
+    if (!['Admin', 'Affiliate Manager', 'Analyst'].includes(profile.role))
       return Response.json({ error: 'Insufficient access' }, { status: 403 });
     const form = await req.formData();
     const file = form.get('file');
@@ -34,6 +36,9 @@ export async function POST(req: Request) {
     )
       throw Error('Invalid column mapping.');
     const result = validateRows(rows, mapping, market as 'TikTok' | 'Shopee');
+    if(result.errors.length) throw Error(result.errors.slice(0,10).join(" · "));
+    const file_hash = await fileFingerprint(file);
+    const {initialData}=await loadWorkspace();
     const id = crypto.randomUUID();
     const path = `${profile.workspace_id}/imports/${id}/${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const type = file.name.endsWith('.csv')
@@ -48,16 +53,20 @@ export async function POST(req: Request) {
       );
     const job = {
       id,
-      marketplace: market,
+      marketplace: market as 'TikTok' | 'Shopee',
       filename: file.name,
-      status: result.errors.length ? 'Warning' : 'Ready for review',
+      status: 'Completed',
+      file_hash,
       rows: rows.length,
-      successful_rows: 0,
+      successful_rows: rows.length,
       failed_rows: rows.length - result.valid.length,
       mapping,
       created_at: new Date().toISOString(),
     };
-    const { error } = await db.rpc('stage_import', {
+    let normalized;
+    try { normalized=normalizeReport(initialData,market as 'TikTok'|'Shopee',rows,mapping,job); } catch(e) { await db.storage.from('workspace-files').remove([path]); throw e; }
+    const { error } = await db.rpc('process_import', {
+      normalized_rows: normalized,
       job,
       file_metadata: { path, size: file.size, type },
       raw_rows: rows,

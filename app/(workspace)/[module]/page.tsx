@@ -1,9 +1,11 @@
+import { PerformanceOverview, MyWork } from '@/components/workflows/workspace';
+import { HSL, Samples, PeakDays } from '@/components/workflows/activations';
+import { Reports } from '@/components/workflows/reports';
 import { notFound } from 'next/navigation';
 import { EntityTable } from '@/components/operations/entity-table';
 import { MarketplacePage } from '@/components/operations/marketplace';
 import { ImportCenter } from '@/components/operations/import-center';
 import {
-  ReportsPage,
   UsersPage,
   SettingsPage,
 } from '@/components/operations/system-pages';
@@ -32,7 +34,12 @@ export default async function Page({
       />
     );
   if (module === 'imports') return <ImportCenter />;
-  if (module === 'reports') return <ReportsPage />;
+  if (module === 'reports') return <Reports />;
+  if (module === 'my-work') return <MyWork />;
+  if (module === 'performance') return <PerformanceOverview />;
+  if (module === 'hsl') return <HSL />;
+  if (module === 'samples') return <Samples />;
+  if (module === 'peak-days') return <PeakDays />;
   if (module === 'users') return <UsersPage />;
   if (module === 'settings') return <SettingsPage />;
   notFound();

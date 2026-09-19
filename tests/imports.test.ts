@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { parseCSV, validateRows, mappings } from '../lib/imports/validation.ts';
 void test('CSV preserves commas, escaped quotes, CRLF and multiline fields', () => {
   assert.deepEqual(
-    parseCSV('name,note\r\n"Putri, Nadia","Said ""hello""\nagain"'),
-    [{ name: 'Putri, Nadia', note: 'Said "hello"\nagain' }],
+    parseCSV('name,note\r\n"Demo Creator","Said ""hello""\nagain"'),
+    [{ name: 'Demo Creator', note: 'Said "hello"\nagain' }],
   );
 });
 void test('CSV rejects malformed records and duplicate headers', () => {
@@ -12,10 +12,10 @@ void test('CSV rejects malformed records and duplicate headers', () => {
   assert.throws(() => parseCSV('a,b\n1'));
   assert.throws(() => parseCSV('a\n"unclosed'));
 });
-const map = Object.fromEntries(mappings.TikTok.map((f) => [f.key, f.key]));
+const map = Object.fromEntries(mappings.TikTok.filter(f=>f.key!=='order_id').map((f) => [f.key, f.key]));
 const good = {
   date: '2026-09-08',
-  username: '@nadia',
+  username: '@demo_creator',
   campaign_id: 'campaign-id',
   gmv: '120000',
   orders: '2',

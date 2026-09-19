@@ -1,3 +1,4 @@
+import { operationTables } from '@/lib/operations/config';
 import { seed } from '@/lib/data/seed';
 import { configured, identity } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
@@ -8,7 +9,7 @@ export async function loadWorkspace() {
       initialData: seed,
       demo: true,
       role: 'Admin' as Role,
-      name: 'Hari Hartosurya',
+      name: 'Demo Operator',
     };
   let auth;
   try {
@@ -26,6 +27,7 @@ export async function loadWorkspace() {
     'import_jobs',
     'activity_logs',
     'campaign_creators',
+    ...operationTables.filter(t=>t!=='campaign_creators'),
   ];
   const results = await Promise.all(
     tableNames.map(async (table) => {
@@ -52,6 +54,7 @@ export async function loadWorkspace() {
     tableNames.map((t, i) => [t, results[i].data || []]),
   );
   const initialData = {
+    operations: Object.fromEntries(operationTables.filter(t=>t!=='campaign_creators').map(t=>[t,byTable[t]])),
     entities: Object.fromEntries(
       entities.map((e) => [e, byTable[e]]),
     ) as WorkspaceData['entities'],

@@ -1,4 +1,4 @@
-import { uid, type RecordData, type WorkspaceData } from '@/types/domain';
+import { uid, type RecordData, type WorkspaceData } from '../../types/domain.ts';
 const row = (
   n: number,
   name: string,
@@ -10,44 +10,24 @@ const row = (
   created_at: '2026-09-01T08:00:00Z',
   ...values,
 });
-const names = [
-  'Nadia Putri',
-  'Rizky Pratama',
-  'Sarah Amalia',
-  'Dinda Maharani',
-  'Fajar Ramadhan',
-  'Alya Safitri',
-  'Kevin Aditya',
-  'Putri Anindya',
-  'Rani Kusuma',
-  'Bima Saputra',
-  'Citra Lestari',
-  'Dewi Anggraini',
-  'Arif Wibowo',
-  'Melati Sari',
-  'Adinda Kirana',
-  'Nabila Zahra',
-  'Tasya Farasya',
-  'Andi Prasetyo',
-  'Vina Oktaviani',
-  'Reza Maulana',
-];
+const names = Array.from({length:20}, (_,i)=>'Demo Creator '+String(i+1).padStart(2,'0'));
+
 const clients = [
   row(1, 'Haleon', {
     industry: 'Consumer healthcare',
-    owner: 'Hari Hartosurya',
+    owner: 'Demo Operator',
   }),
   row(2, 'Paragon Technology', {
     industry: 'Beauty & personal care',
-    owner: 'Sarah Wijaya',
+    owner: 'Demo Analyst',
   }),
   row(3, 'Unilever Indonesia', {
     industry: 'Consumer goods',
-    owner: 'Andi Pratama',
+    owner: 'Demo Manager',
   }),
   row(4, 'Mayora Indah', {
     industry: 'Food & beverages',
-    owner: 'Sarah Wijaya',
+    owner: 'Demo Analyst',
   }),
 ];
 const brands = [
@@ -76,7 +56,7 @@ const campaigns = [
     end_date: i === 4 ? '2026-09-09' : '2026-09-30',
     target_gmv: [150, 100, 80, 65, 75, 60, 45, 40][i] * 1000000,
     target_orders: 1500,
-    owner: i % 2 ? 'Sarah Wijaya' : 'Hari Hartosurya',
+    owner: i % 2 ? 'Demo Analyst' : 'Demo Operator',
     objective:
       'Grow attributable affiliate sales through consistent creator activation.',
   }),
@@ -86,7 +66,7 @@ const creators = names.map((name, i) =>
     category: ['Beauty', 'Lifestyle', 'Wellness', 'Family', 'Food & beverages'][
       i % 5
     ],
-    email: name.toLowerCase().replace(' ', '.') + '@example.com',
+    email: name.toLowerCase().replaceAll(' ', '.') + '@example.com',
     tags: i % 3 ? 'Rising creator' : 'Top performer',
     notes: '',
     status: i === 11 ? 'Watchlist' : 'Active',
@@ -109,7 +89,7 @@ const products = [
 );
 const tasks = [
   'Review September creator deliverables',
-  'Complete Nadia’s campaign brief',
+  'Complete Demo Creator 02 campaign brief',
   'Validate Shopee 9.9 report',
   'Follow up on missing creator handles',
   'Prepare Haleon weekly performance review',
@@ -123,7 +103,7 @@ const tasks = [
     client_id: brands[i % 6].client_id,
     due_date: i < 3 ? '2026-09-07' : '2026-09-12',
     priority: i < 2 ? 'High' : 'Medium',
-    owner: i % 2 ? 'Sarah Wijaya' : 'Hari Hartosurya',
+    owner: i % 2 ? 'Demo Analyst' : 'Demo Operator',
     status: i === 5 ? 'Done' : i % 3 === 0 ? 'In Progress' : 'To Do',
   }),
 );
@@ -217,7 +197,7 @@ export const seed: WorkspaceData = {
       entity_type: 'imports',
       entity_id: uid(800),
       created_at: '2026-09-08T07:30:00Z',
-      user: 'Sarah Wijaya',
+      user: 'Demo Analyst',
     },
     {
       id: uid(901),
@@ -225,7 +205,7 @@ export const seed: WorkspaceData = {
       entity_type: 'campaigns',
       entity_id: uid(30),
       created_at: '2026-09-01T08:00:00Z',
-      user: 'Hari Hartosurya',
+      user: 'Demo Operator',
     },
   ],
   campaign_creators: creators.map((c, i) => ({

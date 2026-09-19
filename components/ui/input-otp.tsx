@@ -1,3 +1,4 @@
+/* oxlint-disable jsx-a11y/prefer-tag-over-role -- Polymorphic UI primitive preserves its documented DOM and ARIA role. */
 'use client';
 
 import * as React from 'react';

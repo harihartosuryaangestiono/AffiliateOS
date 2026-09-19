@@ -7,12 +7,18 @@ import {
   type ReactNode,
 } from 'react';
 import type { WorkspaceData, Role, Entity, RecordData } from '@/types/domain';
+import { upgradeDemo } from '@/lib/operations/demo';
+import { applyChanges, freezeReport, recordCreatorStage, type Change } from '@/lib/operations/mutations';
+import { canOperate } from '@/lib/operations/config';
+import { entitySchema } from '@/lib/validations/entities';
 import { toast } from 'sonner';
 import {
   useBrowserStorage,
   writeBrowserStorage,
 } from '@/hooks/use-browser-storage';
 type Context = {
+  mutate: (changes: Change[]) => Promise<void>;
+  finalize: (id: string) => Promise<void>;
   data: WorkspaceData;
   setData: (d: WorkspaceData) => void;
   demo: boolean;
@@ -28,7 +34,7 @@ export function WorkspaceProvider({
   initialData,
   demo,
   role = 'Admin',
-  name = 'Hari Hartosurya',
+  name = 'Demo Operator',
 }: {
   children: ReactNode;
   initialData: WorkspaceData;
@@ -45,9 +51,9 @@ export function WorkspaceProvider({
   const data = useMemo(() => {
     if (!demo) return liveData;
     try {
-      return JSON.parse(stored) as WorkspaceData;
+      return upgradeDemo(JSON.parse(stored) as WorkspaceData);
     } catch {
-      return initialData;
+      return upgradeDemo(initialData);
     }
   }, [stored, demo, liveData, initialData]);
   const displayName = useBrowserStorage('affiliateos-profile-name', name, demo);
@@ -61,6 +67,9 @@ export function WorkspaceProvider({
       ['campaigns', 'creators', 'tasks'].includes(e));
   const save = async (e: Entity, r: RecordData) => {
     if (!canEdit(e)) throw Error('Your role does not allow this change.');
+    const validated = entitySchema(e).safeParse(r);
+    if (!validated.success) throw Error(validated.error.issues.map(i=>i.message).join(' · '));
+    if (e==='creators' && r.phone && !/^[+0-9 ()-]{8,22}$/.test(String(r.phone))) throw Error('Enter a valid international phone number.');
     const exists = data.entities[e].some((x) => x.id === r.id);
     if (!demo) {
       const response = await fetch('/api/entities/' + e, {
@@ -75,7 +84,7 @@ export function WorkspaceProvider({
         );
     }
     setData({
-      ...data,
+      ...(e === 'creators' ? recordCreatorStage(data, r, name) : data),
       entities: {
         ...data.entities,
         [e]: exists
@@ -99,6 +108,7 @@ export function WorkspaceProvider({
   const remove = async (e: Entity, id: string) => {
     if (!canEdit(e)) throw Error('Your role does not allow this change.');
     const linked = [
+      ...Object.values(data.operations || {}).flat(),
       ...data.tiktok_accounts,
       ...data.shopee_accounts,
       ...data.campaign_creators,
@@ -152,10 +162,35 @@ export function WorkspaceProvider({
     });
     toast.success('Record deleted');
   };
+  const mutate = async (changes: Change[]) => {
+    const result = applyChanges(data, changes, role, name);
+    if (!demo) {
+      const response = await fetch('/api/operations', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({changes})});
+      const value = await response.json() as {error?:string; data:WorkspaceData};
+      if (!response.ok) throw Error(value.error || 'Could not save operations.');
+      setData(value.data);
+    } else setData(result.data);
+    toast.success('Changes saved');
+  };
+  const finalize = async (id:string) => {
+    if (!canOperate(role,'reports')) throw Error('Read-only access.');
+    if (!demo) {
+      const response = await fetch('/api/operations', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({finalize:id})});
+      const value = await response.json() as {error?:string; data:WorkspaceData};
+      if (!response.ok) throw Error(value.error || 'Could not finalize report.');
+      setData(value.data);
+    } else {
+      const result=freezeReport(data,id,name);
+      setData({...result.data,activity:[{id:crypto.randomUUID(),action:'Report finalized',entity_type:'reports',entity_id:id,created_at:new Date().toISOString(),user:name},...data.activity]});
+    }
+    toast.success('Report marked Ready · metrics frozen');
+  };
   return (
     <C.Provider
       value={{
         data,
+        mutate,
+        finalize,
         setData,
         demo,
         role,

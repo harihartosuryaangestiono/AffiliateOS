@@ -1,4 +1,5 @@
 'use client';
+import { ThresholdSettings } from '@/components/workflows/workspace';
 import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
@@ -60,7 +61,9 @@ export function ReportsPage() {
           },
         ].map((r) => (
           <section className="panel report-card" key={r.name}>
-            <r.icon size={24} />
+            <span className="section-symbol">
+              <r.icon size={23} />
+            </span>
             <h2>{r.name}</h2>
             <p>{r.desc}</p>
             <div className="report-options">
@@ -135,7 +138,9 @@ export function UsersPage() {
           },
         ].map((r) => (
           <section key={r.role} className="panel detail-panel">
-            <ShieldCheck size={20} className="text-blue-600 mb-4" />
+            <span className="section-symbol">
+              <ShieldCheck size={22} />
+            </span>
             <h2>{r.role}</h2>
             <p className="text-xs text-muted-foreground leading-6">{r.desc}</p>
           </section>
@@ -212,6 +217,7 @@ export function SettingsPage() {
           <p>The foundations of a well-run workspace.</p>
         </div>
       </div>
+      <ThresholdSettings />
       <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
         <TabsList variant="line" className="tabs-nav w-full justify-start">
           {[

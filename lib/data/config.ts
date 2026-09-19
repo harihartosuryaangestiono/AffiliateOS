@@ -1,4 +1,4 @@
-import type { Entity } from '@/types/domain';
+import type { Entity } from '../../types/domain.ts';
 export type Field = {
   key: string;
   label: string;
@@ -80,7 +80,13 @@ export const config: Record<
         options: ['TikTok', 'Shopee', 'Multi-platform'],
         required: true,
       },
+      { key: 'campaign_type', label: 'Campaign type (custom allowed)' },
       { key: 'objective', label: 'Objective', type: 'textarea' },
+      { key: 'target_affiliates', label: 'Target affiliates with sales', type: 'number' },
+      { key: 'target_creators', label: 'Target creators', type: 'number' },
+      { key: 'target_live_creators', label: 'Target live creators', type: 'number' },
+      { key: 'target_video_creators', label: 'Target video creators', type: 'number' },
+      { key: 'target_content', label: 'Target content', type: 'number' },
       {
         key: 'start_date',
         label: 'Start date',
@@ -117,6 +123,10 @@ export const config: Record<
     description: 'The people behind your performance.',
     fields: [
       { key: 'name', label: 'Creator name', required: true },
+      { key: 'phone', label: 'WhatsApp number (country code, digits only)' },
+      { key: 'relationship_status', label: 'Relationship', options: ['Prospect','New','Existing','Lost','Reactivation','Inactive'] },
+      { key: 'acquisition_stage', label: 'Acquisition stage', options: ['Prospect','Contacted','Responded','Interested','Locked','Activated','Affiliate With Sales'] },
+      { key: 'acquisition_source', label: 'Acquisition source', options: ['Manual','Shopee Discovery','TikTok Discovery','Competitor Creator','Existing Database','Referral','Campaign'] },
       { key: 'email', label: 'Contact email', type: 'email' },
       {
         key: 'category',
@@ -159,6 +169,8 @@ export const config: Record<
     fields: [
       { key: 'name', label: 'Product name', required: true },
       { key: 'sku', label: 'SKU', required: true },
+      { key: 'tiktok_product_id', label: 'TikTok product ID' },
+      { key: 'shopee_item_id', label: 'Shopee item ID' },
       { key: 'brand_id', label: 'Brand', relation: 'brands', required: true },
       { key: 'category', label: 'Category' },
       { key: 'status', label: 'Status', options: ['Active', 'Inactive'] },
@@ -171,6 +183,10 @@ export const config: Record<
     description: 'Make the next step clear. Keep work moving.',
     fields: [
       { key: 'name', label: 'Task title', required: true },
+      { key: 'recurrence_type', label: 'Recurrence', options: ['None','Weekly','Monthly','Campaign event'] },
+      { key: 'weekly_day', label: 'Weekly day' },
+      { key: 'monthly_week', label: 'Monthly week', type: 'number' },
+      { key: 'relative_campaign_event', label: 'Relative campaign event' },
       { key: 'client_id', label: 'Client', relation: 'clients' },
       { key: 'campaign_id', label: 'Campaign', relation: 'campaigns' },
       { key: 'creator_id', label: 'Creator', relation: 'creators' },

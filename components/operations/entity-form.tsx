@@ -138,7 +138,7 @@ export function EntityForm({
                         ...values,
                         [f.key]:
                           f.type === 'number'
-                            ? Number(e.target.value)
+                            ? (e.target.value === '' ? null : Number(e.target.value))
                             : e.target.value,
                       })
                     }

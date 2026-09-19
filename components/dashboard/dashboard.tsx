@@ -32,15 +32,17 @@ import { money, number, sum, trend, initials } from '@/lib/data/metrics';
 export function TrendChart({
   market = 'Overall',
   days = 30,
+  period,
 }: {
   market?: string;
   days?: number;
+  period?: {start:string;end:string};
 }) {
   const { data } = useWorkspace();
   return (
     <ResponsiveContainer width="100%" height={220}>
       <AreaChart
-        data={trend(data, days)}
+        data={trend(period ? {...data,tiktok_performance:data.tiktok_performance.filter(r=>r.date>=period.start&&r.date<=period.end),shopee_performance:data.shopee_performance.filter(r=>r.date>=period.start&&r.date<=period.end)} : data, days)}
         margin={{ top: 12, right: 10, left: 0, bottom: 0 }}
       >
         <defs>
@@ -92,7 +94,7 @@ export function TrendChart({
             type="monotone"
             name="Shopee"
             dataKey="Shopee"
-            stroke="#a6b6c9"
+            stroke="#ff9256"
             strokeWidth={2}
             fill="transparent"
             strokeDasharray="4 4"
@@ -198,10 +200,12 @@ export function Dashboard() {
       </div>
       <div className="kpi-grid">
         {kpis.map((k, i) => (
-          <section className="kpi-card" key={k.label}>
+          <section className={'kpi-card metric-tone-' + i} key={k.label}>
             <div className="kpi-label">
               {k.label}
-              <k.icon size={15} />
+              <span className="metric-icon">
+                <k.icon size={18} />
+              </span>
             </div>
             <div className="kpi-value">{k.value}</div>
             <div className="kpi-bottom">
@@ -212,6 +216,112 @@ export function Dashboard() {
             </div>
           </section>
         ))}
+      </div>
+      <div className="chart-grid">
+        <section className="panel trend-panel">
+          <div className="panel-heading">
+            <div>
+              <h2>GMV trend</h2>
+              <p>Daily performance across your marketplaces</p>
+            </div>
+            <Tabs value={market} onValueChange={(v) => setMarket(String(v))}>
+              <TabsList>
+                {['Overall', 'TikTok', 'Shopee'].map((v) => (
+                  <TabsTrigger key={v} value={v}>
+                    {v}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
+          <div className="chart-total">
+            {money(
+              market === 'TikTok'
+                ? sum(tt)
+                : market === 'Shopee'
+                  ? sum(sp)
+                  : total,
+            )}
+            <span>in selected period</span>
+          </div>
+          <TrendChart market={market} days={days} />
+          <div className="chart-legend">
+            <span>
+              <i style={{ background: '#0071e3' }} />
+              TikTok
+            </span>
+            <span>
+              <i style={{ background: '#ff9256' }} />
+              Shopee
+            </span>
+          </div>
+        </section>
+        <section className="panel contribution">
+          <div className="panel-heading">
+            <div>
+              <h2>Marketplace contribution</h2>
+              <p>Share of total GMV</p>
+            </div>
+          </div>
+          <div className="donut">
+            <ResponsiveContainer width="100%" height={185}>
+              <PieChart>
+                <Pie
+                  data={[
+                    { value: sum(tt), fill: '#0071e3' },
+                    { value: sum(sp), fill: '#ff9256' },
+                  ]}
+                  innerRadius={63}
+                  outerRadius={80}
+                  dataKey="value"
+                  startAngle={90}
+                  endAngle={-270}
+                  strokeWidth={4}
+                ></Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="donut-label">
+              <small>Total GMV</small>
+              <strong>{money(total)}</strong>
+            </div>
+          </div>
+          {[
+            ['TikTok', sum(tt), '#0071e3'],
+            ['Shopee', sum(sp), '#ff9256'],
+          ].map(([m, v, c]) => (
+            <div className="contribution-row" key={m}>
+              <i style={{ background: String(c) }} />
+              <span>{m}</span>
+              <strong>{money(Number(v))}</strong>
+              <small>
+                {((Number(v) / Math.max(total, 1)) * 100).toFixed(1)}%
+              </small>
+            </div>
+          ))}
+        </section>
+        <section className="panel recent-activity-panel">
+          <div className="panel-heading">
+            <h2>Recent activity</h2>
+            <Link className="text-link" href="/imports">
+              Import history <ArrowRight size={13} />
+            </Link>
+          </div>
+          {data.activity.slice(0, 3).map((a) => (
+            <div className="activity-item" key={a.id}>
+              <span className="activity-dot" />
+              <div>
+                <strong>{a.action}</strong>
+                <small>
+                  {a.user} ·{' '}
+                  {new Date(a.created_at).toLocaleDateString('en', {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </small>
+              </div>
+            </div>
+          ))}
+        </section>
       </div>
       <div className="section-heading">
         <h2>Marketplace performance</h2>
@@ -271,89 +381,6 @@ export function Dashboard() {
             </Link>
           );
         })}
-      </div>
-      <div className="chart-grid">
-        <section className="panel trend-panel">
-          <div className="panel-heading">
-            <div>
-              <h2>GMV trend</h2>
-              <p>Daily performance across your marketplaces</p>
-            </div>
-            <Tabs value={market} onValueChange={(v) => setMarket(String(v))}>
-              <TabsList>
-                {['Overall', 'TikTok', 'Shopee'].map((v) => (
-                  <TabsTrigger key={v} value={v}>
-                    {v}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-          </div>
-          <div className="chart-total">
-            {money(
-              market === 'TikTok'
-                ? sum(tt)
-                : market === 'Shopee'
-                  ? sum(sp)
-                  : total,
-            )}
-            <span>in selected period</span>
-          </div>
-          <TrendChart market={market} days={days} />
-          <div className="chart-legend">
-            <span>
-              <i style={{ background: '#0071e3' }} />
-              TikTok
-            </span>
-            <span>
-              <i style={{ background: '#a6b6c9' }} />
-              Shopee
-            </span>
-          </div>
-        </section>
-        <section className="panel contribution">
-          <div className="panel-heading">
-            <div>
-              <h2>Marketplace contribution</h2>
-              <p>Share of total GMV</p>
-            </div>
-          </div>
-          <div className="donut">
-            <ResponsiveContainer width="100%" height={185}>
-              <PieChart>
-                <Pie
-                  data={[
-                    { value: sum(tt), fill: '#0071e3' },
-                    { value: sum(sp), fill: '#dbe6f2' },
-                  ]}
-                  innerRadius={63}
-                  outerRadius={80}
-                  dataKey="value"
-                  startAngle={90}
-                  endAngle={-270}
-                  strokeWidth={4}
-                ></Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="donut-label">
-              <small>Total GMV</small>
-              <strong>{money(total)}</strong>
-            </div>
-          </div>
-          {[
-            ['TikTok', sum(tt), '#0071e3'],
-            ['Shopee', sum(sp), '#dbe6f2'],
-          ].map(([m, v, c]) => (
-            <div className="contribution-row" key={m}>
-              <i style={{ background: String(c) }} />
-              <span>{m}</span>
-              <strong>{money(Number(v))}</strong>
-              <small>
-                {((Number(v) / Math.max(total, 1)) * 100).toFixed(1)}%
-              </small>
-            </div>
-          ))}
-        </section>
       </div>
       <div className="lower-grid">
         <section className="panel">
@@ -458,7 +485,7 @@ export function Dashboard() {
           ))}
         </section>
       </div>
-      <div className="lower-grid bottom-grid">
+      <div className="lower-grid bottom-grid creators-summary">
         <section className="panel">
           <div className="panel-heading">
             <h2>Top creators</h2>
@@ -487,29 +514,6 @@ export function Dashboard() {
               </strong>
               <ArrowUpRight size={14} />
             </Link>
-          ))}
-        </section>
-        <section className="panel">
-          <div className="panel-heading">
-            <h2>Recent activity</h2>
-            <Link className="text-link" href="/imports">
-              Import history <ArrowRight size={13} />
-            </Link>
-          </div>
-          {data.activity.slice(0, 3).map((a) => (
-            <div className="activity-item" key={a.id}>
-              <span className="activity-dot" />
-              <div>
-                <strong>{a.action}</strong>
-                <small>
-                  {a.user} ·{' '}
-                  {new Date(a.created_at).toLocaleDateString('en', {
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </small>
-              </div>
-            </div>
           ))}
         </section>
       </div>

@@ -54,6 +54,7 @@ export type ImportJob = {
   mapping?: Record<string, string>;
   raw_rows?: Record<string, string>[];
   errors?: string[];
+  file_hash?: string;
 };
 export type Activity = {
   id: string;
@@ -65,13 +66,14 @@ export type Activity = {
 };
 export type WorkspaceData = {
   entities: Record<Entity, RecordData[]>;
+  operations?: Record<string, RecordData[]>;
   tiktok_accounts: Account[];
   shopee_accounts: Account[];
   tiktok_performance: TikTokPerformance[];
   shopee_performance: ShopeePerformance[];
   imports: ImportJob[];
   activity: Activity[];
-  campaign_creators: { id: string; campaign_id: string; creator_id: string }[];
+  campaign_creators: { id: string; campaign_id: string; creator_id: string; status?: string; locked_at?: string | null; locked_by?: string | null; format?: string }[];
 };
 export const entities: Entity[] = [
   'clients',

@@ -1,4 +1,6 @@
 'use client';
+import { fileFingerprint, normalizeReport, applyImportedRows } from '@/lib/imports/normalize';
+import { todayISO, shiftDate } from '@/lib/operations/engine';
 import { readReport } from '@/lib/imports/read-file';
 import { useState, useRef } from 'react';
 import Link from 'next/link';
@@ -37,7 +39,7 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
-  const canImport = role === 'Admin' || role === 'Affiliate Manager';
+  const canImport = ['Admin','Affiliate Manager','Analyst'].includes(role);
   const validation = market
     ? validateRows(rows, mapping, market)
     : { errors: [], valid: [] };
@@ -90,13 +92,15 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
         filename: file.name,
         created_at: new Date().toISOString(),
         rows: rows.length,
-        successful_rows: 0,
+        successful_rows: rows.length,
         failed_rows: rows.length - validation.valid.length,
-        status: validation.errors.length ? 'Warning' : 'Ready for review',
+        status: 'Completed',
+        file_hash: await fileFingerprint(file),
         mapping,
         raw_rows: rows,
         errors: validation.errors,
       };
+      const normalized = normalizeReport(data, market, rows, mapping, job);
       if (demo) await preserveDemoFile(job.id, file);
       if (!demo) {
         const payload = new FormData();
@@ -116,12 +120,11 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
         if (value.job) Object.assign(job, value.job);
       }
       setData({
-        ...data,
-        imports: [job, ...data.imports],
+        ...applyImportedRows(data, job, normalized),
         activity: [
           {
             id: crypto.randomUUID(),
-            action: market + ' import saved for review',
+            action: market + ' import completed',
             entity_type: 'imports',
             entity_id: job.id,
             user: name,
@@ -131,7 +134,7 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
         ],
       });
       setStep(3);
-      toast.success('Import saved for review');
+      toast.success('Import completed · marketplace performance updated');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save import.');
     } finally {
@@ -140,14 +143,15 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
   }
   function sample() {
     if (!market) return;
-    const fields = mappings[market].map((f) => f.key);
+    const fields = mappings[market].filter(f=>f.key!=='order_id').map((f) => f.key);
     const acc = (
       market === 'TikTok' ? data.tiktok_accounts : data.shopee_accounts
     )[0];
     const values: Record<string, string> = {
-      date: '2026-09-08',
+      date: shiftDate(todayISO(), -2),
       username: acc?.username || 'creatorname',
-      campaign_id: data.entities.campaigns[0]?.id || '',
+      campaign_id: data.entities.campaigns.find(c=>c.marketplace===market||c.marketplace==='Multi-platform')?.id || '',
+      product_id: '',
       gmv: '1250000',
       orders: '20',
       units_sold: '25',
@@ -216,7 +220,7 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
       ) : (
         <section className="panel mb-6">
           <div className="import-steps">
-            {['Upload file', 'Preview & map', 'Validate & review', 'Saved'].map(
+            {['Upload file', 'Preview & map', 'Validate & normalize', 'Processed'].map(
               (s, i) => (
                 <span
                   className={
@@ -375,20 +379,17 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
                   </div>
                 )}
                 <div className="info-notice">
-                  The original file, raw rows, mapping, and validation results
-                  will be saved for review. Analytics will stay unchanged until
-                  normalization is implemented. Account and campaign matching is
-                  part of that next step.
+                  The original file and raw rows are preserved. Validated records are matched to marketplace accounts and campaigns, then processed together. Duplicate files and overlapping daily records are rejected without changing analytics.
                 </div>
                 <div className="flex justify-between mt-6">
                   <Button variant="outline" onClick={() => setStep(1)}>
                     Back to mapping
                   </Button>
-                  <Button disabled={busy || !canImport} onClick={stage}>
+                  <Button disabled={busy || !canImport || validation.errors.length > 0} onClick={stage}>
                     {busy && (
                       <LoaderCircle className="animate-spin" size={14} />
                     )}
-                    Save for review
+                    Process payment orders
                   </Button>
                 </div>
               </>
@@ -397,11 +398,11 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
                 <span className="saved-check">
                   <Check size={26} />
                 </span>
-                <h2>Import saved for review</h2>
+                <h2>Import completed</h2>
                 <p>
                   {file?.name} is preserved with its original rows and mapping.
                 </p>
-                <p>It has not changed your marketplace analytics.</p>
+                <p>Marketplace performance and draft report metrics are now updated. Finalized reports remain unchanged.</p>
                 <Button
                   onClick={() => {
                     setStep(0);

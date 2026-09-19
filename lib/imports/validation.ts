@@ -1,8 +1,10 @@
 export const mappings = {
   TikTok: [
     { key: 'date', label: 'Date', required: true },
+    { key: 'order_id', label: 'Payment order ID (optional, enables order-level aggregation)' },
     { key: 'username', label: 'TikTok username', required: true },
     { key: 'campaign_id', label: 'Campaign ID', required: true },
+    { key: 'product_id', label: 'Internal product ID (optional)' },
     { key: 'gmv', label: 'GMV (IDR)', required: true },
     { key: 'orders', label: 'Orders', required: true },
     { key: 'units_sold', label: 'Items sold' },
@@ -12,8 +14,10 @@ export const mappings = {
   ],
   Shopee: [
     { key: 'date', label: 'Date', required: true },
+    { key: 'order_id', label: 'Payment order ID (optional, enables order-level aggregation)' },
     { key: 'username', label: 'Shopee affiliate username', required: true },
     { key: 'campaign_id', label: 'Campaign ID', required: true },
+    { key: 'product_id', label: 'Internal product ID (optional)' },
     { key: 'gmv', label: 'GMV (IDR)', required: true },
     { key: 'orders', label: 'Orders', required: true },
     { key: 'units_sold', label: 'Units sold' },
@@ -74,7 +78,7 @@ export function validateRows(
   const valid: Record<string, string | number>[] = [];
   const seen = new Set<string>();
   for (const f of mappings[market])
-    if (f.required && !mapping[f.key])
+    if (f.required && !mapping[f.key] && !(f.key === 'orders' && mapping.order_id))
       errors.push(`Map the required ${f.label} column.`);
   if (errors.length) return { errors, valid };
   rows.forEach((r, i) => {
@@ -82,11 +86,12 @@ export function validateRows(
     const rowErrors: string[] = [];
     for (const f of mappings[market]) {
       const raw = r[mapping[f.key]] || '';
-      if (['date', 'username', 'campaign_id'].includes(f.key)) {
+      if (['date', 'username', 'campaign_id', 'product_id', 'order_id'].includes(f.key)) {
         out[f.key] = raw;
         if (f.required && !raw) rowErrors.push(`${f.label} is required`);
       } else {
-        const n = raw === '' && !f.required ? 0 : Number(raw);
+        const n = f.key === 'orders' && !mapping.orders && mapping.order_id ? 1 : raw === '' && !f.required ? 0 : Number(raw);
+        if(f.required && raw === '' && !(f.key==='orders' && mapping.order_id)) rowErrors.push(`${f.label} is required`);
         if (
           !Number.isFinite(n) ||
           n < 0 ||
@@ -114,9 +119,10 @@ export function validateRows(
       new Date(date).toISOString().slice(0, 10) !== date
     )
       rowErrors.push('Date must be a valid YYYY-MM-DD date');
-    const key = [out.date, out.username, out.campaign_id].join('|');
+    const key = mapping.order_id ? String(out.order_id) : [out.date, String(out.username).replace(/^@/, '').toLowerCase(), out.campaign_id, out.product_id].join('|');
+    if(mapping.order_id && !out.order_id) rowErrors.push('Payment order ID is required when mapped');
     if (seen.has(key))
-      rowErrors.push('Duplicate account/date/campaign in this file');
+      rowErrors.push(mapping.order_id ? 'Duplicate payment order ID in this file' : 'Duplicate account/date/campaign in this file');
     seen.add(key);
     if (rowErrors.length) errors.push(`Row ${i + 2}: ${rowErrors.join('; ')}`);
     else valid.push(out);
