@@ -8,19 +8,21 @@ The supplied workbooks, internal tracker, client deck, and weekly document were 
 
 ## Supabase
 
-The browser/server clients support both the existing server variables and `NEXT_PUBLIC_SUPABASE_URL` with either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or the existing anon-key alias. No service-role key is used by client code. Production connection, authentication, workspace membership, and live CRUD remain blocked because no Supabase project URL or publishable key was provided.
+The browser/server clients support both the existing server variables and `NEXT_PUBLIC_SUPABASE_URL` with either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or the existing anon-key alias. No service-role key is used by client code. The supplied configuration was separated locally into an HTTPS Supabase API URL and a PostgreSQL `DATABASE_URL`, with `AFFILIATEOS_MODE=production`. The live Auth and REST endpoints respond correctly; anonymous profile access is denied. The project currently has no Auth user, workspace, or profile, so authenticated application CRUD still awaits first-admin provisioning.
 
 ## Database
 
 `202609190006_production_data_foundation.sql` is additive. It adds import source metadata and periods, reusable mapping profiles, raw-to-normalized lineage, database-managed metric targets, performance indexes, a 50,000-row guard, order-item idempotency, and the atomic `process_import_v16` RPC. Existing Phase 1.5 tables and data are preserved.
 
-All migrations from the baseline schema through Phase 1.6 were applied to a fresh isolated PostgreSQL database, followed by the demo seed and database acceptance suite. Result: PASS.
+All seven migrations from the baseline schema through Phase 1.6 were applied to the live Supabase project and recorded in `supabase_migrations.schema_migrations`. The resulting live schema has 44 public tables, all with RLS enabled, the expected import and mutation RPCs, and a 50 MB private workspace-file bucket. No demo seed or supplied operational workbook data was inserted into production.
+
+The same migrations were also applied to a fresh isolated PostgreSQL database, followed by the demo seed and database acceptance suite. Result: PASS.
 
 ## RLS
 
 Workspace-scoped read/write policies were verified in PostgreSQL for the new mapping, lineage, and metric-target tables. A second-workspace user could not read Phase 1.6 records. A Viewer could not mutate protected operational data. Existing role, immutable snapshot, stock history, and relationship checks also passed.
 
-Live Supabase RLS is not claimed because production credentials were unavailable.
+Live Supabase RLS was tested inside a rolled-back transaction. The suite verified atomic import processing, multi-item order idempotency, raw-to-normalized lineage, reusable mappings, targets, Viewer mutation denial, and cross-workspace isolation. The transaction left zero QA users, workspaces, imports, and targets behind.
 
 ## Demo vs Production
 
@@ -64,22 +66,23 @@ Creator acquisition, outreach, campaign locking, HSL/SKU assignments, stock snap
 - Automated tests: PASS, 15/15.
 - Production build: PASS with vinext.
 - Route smoke test: PASS, 30/30 expected routes plus unknown-route 404.
-- PostgreSQL migration/RLS/integration test: PASS on a fresh isolated database.
+- PostgreSQL migration/RLS/integration test: PASS on a fresh isolated database and the live Supabase project.
+- Supabase API health: PASS; Auth returned 200, anonymous protected-table access returned 401.
+- Production application boundary: PASS; login returned 200, an unauthenticated dashboard request redirected to login, and invalid live credentials returned 401.
 - Real-workbook parser validation: PASS read-only for both marketplace sheets; invalid and excluded records were surfaced rather than hidden.
 - Browser QA: PASS on dashboard and report workflow at desktop width and 390×844 mobile width; report creation/finalization and lineage display worked; no browser console warnings or errors were found.
 
 ## Deployment
 
-No production deployment is claimed. Supabase credentials are required to verify live authentication, workspace membership, storage upload, production CRUD, RLS, and authenticated reporting. The previous Sites deployment attempt also returned an internal authentication-configuration 409 and was not bypassed or weakened.
+No production deployment is claimed. The live database foundation is installed, but the project has no Auth user or workspace membership, so an authenticated application workflow and real file upload cannot yet be verified. The previous Sites deployment attempt also returned an internal authentication-configuration 409 and was not bypassed or weakened.
 
 ## Known Limitations
 
-- BLOCKED — Supabase production credentials required.
-- Live Supabase schema comparison and additive migration have not been run against the user's project.
-- Live authenticated file upload, production CRUD, and tenant isolation must be retested after configuration.
+- BLOCKED — first Supabase Auth user and Admin workspace membership required.
+- Live authenticated file upload and application CRUD must be tested after the first Admin is provisioned.
 - Sites production publishing remains blocked by the existing authentication-configuration conflict.
 - Marketplace API ingestion, automatic WhatsApp broadcast, and automatic livestream stock sync are not part of the file-based Phase 1.6 pipeline.
 
 ## Coming Next
 
-Provide the Supabase project URL and publishable key. Then compare the live schema, apply only pending additive migrations, run authenticated Admin/Analyst/Viewer CRUD and cross-workspace RLS tests, import a controlled marketplace file, verify dashboard/report parity, configure Sites authentication, and deploy the verified production version.
+Create the first user in Supabase Authentication and provide its email address. Assign that user to a new production workspace as Admin, then run browser sign-in, authenticated CRUD, controlled file upload, dashboard/report parity, and storage verification. Finally reconcile Sites authentication and deploy the verified production version.
