@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseCSV, validateRows, mappings } from '../lib/imports/validation.ts';
+import { readFile } from 'node:fs/promises';
+import { parseCSV, validateRows, mappings, detectMapping, sourceSemantics } from '../lib/imports/validation.ts';
 void test('CSV preserves commas, escaped quotes, CRLF and multiline fields', () => {
   assert.deepEqual(
     parseCSV('name,note\r\n"Demo Creator","Said ""hello""\nagain"'),
@@ -41,4 +42,25 @@ void test('marketplace-specific metrics remain independent', () => {
   assert.ok(mappings.Shopee.some((f) => f.key === 'clicks'));
   assert.ok(!mappings.Shopee.some((f) => f.key === 'video_count'));
   assert.equal(validateRows([good], map, 'TikTok').valid.length, 1);
+});
+void test('actual TikTok Payment Order headers are detected and refunded rows are excluded', async () => {
+  const rows=parseCSV(await readFile(new URL('./fixtures/tiktok-payment-order-demo.csv',import.meta.url),'utf8'));
+  const mapping={...detectMapping(Object.keys(rows[0]),'TikTok'),__campaign_id:'campaign-id'};
+  const result=validateRows(rows,mapping,'TikTok');
+  assert.equal(result.valid.length,1);
+  assert.equal(result.valid[0].gmv,150000);
+  assert.equal(result.valid[0].date,'2026-09-17');
+  assert.equal(result.valid[0].video_count,1);
+  assert.ok(result.issues.some(i=>i.severity==='WARNING'&&i.field==='refund_status'));
+  assert.match(sourceSemantics.TikTok,/Payment Amount/);
+});
+void test('actual Shopee Payment Order headers use net purchase value and exclude unverified rows', async () => {
+  const rows=parseCSV(await readFile(new URL('./fixtures/shopee-payment-order-demo.csv',import.meta.url),'utf8'));
+  const mapping={...detectMapping(Object.keys(rows[0]),'Shopee'),__campaign_id:'campaign-id'};
+  const result=validateRows(rows,mapping,'Shopee');
+  assert.equal(result.valid.length,1);
+  assert.equal(result.valid[0].gmv,175000);
+  assert.equal(result.valid[0].units_sold,2);
+  assert.ok(result.issues.some(i=>i.severity==='WARNING'&&i.field==='verified_status'));
+  assert.match(sourceSemantics.Shopee,/less Refund Amount/);
 });

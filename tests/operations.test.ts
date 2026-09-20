@@ -5,7 +5,7 @@ import { upgradeDemo } from '../lib/operations/demo.ts';
 import { metrics, periodRange, comparable, latestStock, stockStatus, stockImpact, readiness, operationalAlerts, whatsappLink, renderMessage } from '../lib/operations/engine.ts';
 import { records } from '../lib/operations/config.ts';
 import { applyChanges, freezeReport } from '../lib/operations/mutations.ts';
-import { normalizeReport, applyImportedRows, fileFingerprint } from '../lib/imports/normalize.ts';
+import { normalizeReport, normalizeReportDetailed, applyImportedRows, fileFingerprint } from '../lib/imports/normalize.ts';
 import { uid, type ImportJob, type RecordData } from '../types/domain.ts';
 const now=new Date('2026-09-19T08:00:00Z'),data=upgradeDemo(structuredClone(seed));
 const record=(n:number,values:Partial<RecordData>):RecordData=>({id:uid(n),name:'QA record',status:'Draft',created_at:now.toISOString(),...values});
@@ -31,6 +31,8 @@ await test('Monday import changes only selected marketplace and rejects identica
  const changed=applyImportedRows(frozen,{...job,id:uid(9992),file_hash:'new'},normalized.map(r=>({...r,id:uid(9993),date:'2026-09-16',gmv:999999})));
  assert.equal(records(changed,'report_snapshots')[0].snapshot_json,snapshot);
  assert.equal(JSON.parse(String(snapshot)).metrics.gmv,before.gmv+50000);
+ assert.ok(JSON.parse(String(snapshot)).metrics.sourceImportIds.includes(job.id));
+ assert.equal(JSON.parse(String(snapshot)).sources.find((s:{id:string})=>s.id===job.id).filename,'qa.csv');
  assert.throws(()=>applyChanges(frozen,[{table:'reports',record:{...draft,status:'Draft'}}],'Admin','QA'),/cannot be reopened/);
 });
 await test('HSL rejects mismatched account and campaign and supports stock impact through Peak Day',()=>{
@@ -62,4 +64,13 @@ await test('Payment-order rows aggregate at daily grain while preserving unique 
  const mapping=Object.fromEntries(Object.keys(raw[0]).map(k=>[k,k]));
  const normalized=normalizeReport(data,'Shopee',raw,mapping,job);assert.equal(normalized.length,1);assert.equal(normalized[0].gmv,350);assert.equal(normalized[0].orders,2);assert.equal(normalized[0].source_import_id,job.id);
  assert.throws(()=>normalizeReport(data,'Shopee',[raw[0],raw[0]],mapping,job),/Duplicate payment order/);
+});
+await test('normalization lineage preserves original row numbers after invalid rows are skipped',()=>{
+ const job:ImportJob={id:uid(9950),marketplace:'Shopee',filename:'lineage.csv',created_at:now.toISOString(),rows:2,successful_rows:1,failed_rows:1,status:'Completed With Warnings'};
+ const campaign=data.entities.campaigns.find(c=>c.marketplace==='Shopee')!;
+ const raw=[{date:'invalid',order_id:'BAD-1',username:data.shopee_accounts[0].username,gmv:'100'},{date:'2026-09-16',order_id:'GOOD-1',username:data.shopee_accounts[0].username,gmv:'200'}];
+ const mapping={date:'date',order_id:'order_id',username:'username',gmv:'gmv',__campaign_id:campaign.id};
+ const result=normalizeReportDetailed(data,'Shopee',raw,mapping,job);
+ assert.equal(result.normalized.length,1);
+ assert.equal(result.lineage[0].raw_row_number,3);
 });

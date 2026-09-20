@@ -56,7 +56,8 @@ export function freezeReport(data:WorkspaceData,id:string,actor:string,now=new D
  const end=String(report.period_end)<String(report.cutoff_date)?String(report.period_end):String(report.cutoff_date),period={start:String(report.period_start),end,cutoff:String(report.cutoff_date)};
  if(end<period.start)throw Error('No report dates before cutoff.');
  const filter={campaign_id:report.campaign_id?String(report.campaign_id):undefined,client_id:report.client_id?String(report.client_id):undefined};
- const snapshot={id:crypto.randomUUID(),name:report.name,status:'Final',created_at:now,report_id:report.id,snapshot_json:JSON.stringify({period,marketplace:report.marketplace,metrics:metrics(data,period,String(report.marketplace),filter),TikTok:metrics(data,period,'TikTok',filter),Shopee:metrics(data,period,'Shopee',filter),narrative:{what_went_well:report.what_went_well,issues:report.issues,next_action:report.next_action},finalized_by:actor})};
+ const reportMetrics=metrics(data,period,String(report.marketplace),filter),sources=data.imports.filter(job=>reportMetrics.sourceImportIds.includes(job.id)).map(job=>({id:job.id,marketplace:job.marketplace,filename:job.filename,source_type:job.source_type,sales_metric:job.sales_metric,period_start:job.period_start,period_end:job.period_end,status:job.status}));
+ const snapshot={id:crypto.randomUUID(),name:report.name,status:'Final',created_at:now,report_id:report.id,snapshot_json:JSON.stringify({period,marketplace:report.marketplace,metrics:reportMetrics,TikTok:metrics(data,period,'TikTok',filter),Shopee:metrics(data,period,'Shopee',filter),sources,narrative:{what_went_well:report.what_went_well,issues:report.issues,next_action:report.next_action},finalized_by:actor})};
  const finalized={...report,status:'Ready',finalized_at:now};
  return {data:putRecord(putRecord(data,'report_snapshots',snapshot),'reports',finalized),changes:[{table:'report_snapshots',record:snapshot},{table:'reports',record:finalized}]};
 }

@@ -1,0 +1,3 @@
+Order ID,Product ID,Product Name,SKU ID,Payment Amount,Currency,Quantity,Fully returned or refunded,Order Status,Creator Username,Content Type,Actual Commission Payment,Payment time
+TT-DEMO-001,TT-PROD-01,Demo Wellness Product,TT-SKU-01,150000,IDR,2,No,Completed,@demo_tiktok,Video,15000,17/09/2026 09:30
+TT-DEMO-002,TT-PROD-01,Demo Wellness Product,TT-SKU-01,80000,IDR,1,Yes,Refunded,@demo_tiktok,Live,8000,17/09/2026 10:30

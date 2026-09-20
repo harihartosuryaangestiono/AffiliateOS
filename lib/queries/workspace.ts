@@ -1,16 +1,19 @@
 import { operationTables } from '@/lib/operations/config';
 import { seed } from '@/lib/data/seed';
-import { configured, identity } from '@/lib/supabase/server';
+import { configured, identity, workspaceMode } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { entities, type WorkspaceData, type Role } from '@/types/domain';
 export async function loadWorkspace() {
-  if (!configured())
+  if (workspaceMode()==='production'&&!configured())
+    throw Error('Production mode requires a Supabase URL and publishable key. AffiliateOS will not fall back to demo data.');
+  if (workspaceMode()==='demo')
     return {
       initialData: seed,
       demo: true,
       role: 'Admin' as Role,
       name: 'Demo Operator',
     };
+  if(!configured()) throw Error('Supabase configuration is incomplete.');
   let auth;
   try {
     auth = await identity();

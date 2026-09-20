@@ -1,5 +1,6 @@
 'use client';
 import { ThresholdSettings } from '@/components/workflows/workspace';
+import { OperationsTable } from '@/components/workflows/primitives';
 import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
@@ -149,7 +150,7 @@ export function UsersPage() {
     </>
   );
 }
-export function SettingsPage() {
+export function SettingsPage({ initialTab }: { initialTab?: string } = {}) {
   const { name, role, demo } = useWorkspace();
   const params = useSearchParams();
   const router = useRouter();
@@ -163,7 +164,7 @@ export function SettingsPage() {
   ];
   const tab =
     tabs.find((t) => t.toLowerCase() === params.get('tab')?.toLowerCase()) ||
-    'Workspace';
+    initialTab || 'Workspace';
   const setTab = (value: string) =>
     router.replace('/settings?tab=' + encodeURIComponent(value));
   const storedProfile = useBrowserStorage(
@@ -304,7 +305,7 @@ export function SettingsPage() {
             <div className="settings-row">
               <div>
                 <strong>Accepted files</strong>
-                <p>CSV and XLSX · 5 MB · up to 10,000 rows</p>
+                <p>CSV and XLSX · 50 MB · up to 50,000 rows</p>
               </div>
               <Link className="button-outline" href="/imports">
                 Open Import Center <ArrowUpRight size={14} />
@@ -326,6 +327,7 @@ export function SettingsPage() {
           </section>
         </TabsContent>
         <TabsContent value="Data Preferences">
+          <OperationsTable table="metric_targets" title="Reporting targets" />
           <section className="panel detail-panel">
             <h2>Data preferences</h2>
             {[

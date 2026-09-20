@@ -1,0 +1,3 @@
+Order id,Order Status,Verified Status,Order Time,Item id,Item Name,Model id,Purchase Value(Rp),Refund Amount(Rp),Qty,Affiliate Name,Affiliate Username,Item Brand Commission to Affiliate(Rp)
+SHP-DEMO-001,Completed,Valid,2026-09-17 09:00:00 +0700,SHP-PROD-01,Demo Wellness Product,SHP-MODEL-01,200000,25000,2,Demo Creator,demo_shopee,17500
+SHP-DEMO-002,Cancelled,Invalid,2026-09-17 10:00:00 +0700,SHP-PROD-01,Demo Wellness Product,SHP-MODEL-01,100000,100000,1,Demo Creator,demo_shopee,0

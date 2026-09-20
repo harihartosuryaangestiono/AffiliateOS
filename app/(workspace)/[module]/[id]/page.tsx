@@ -5,6 +5,7 @@ import { Reports } from '@/components/workflows/reports';
 import { notFound } from 'next/navigation';
 import { EntityDetail } from '@/components/operations/entity-detail';
 import { ImportCenter } from '@/components/operations/import-center';
+import { SettingsPage } from '@/components/operations/system-pages';
 import { entities, type Entity } from '@/types/domain';
 export default async function Page({
   params,
@@ -23,6 +24,8 @@ export default async function Page({
     return (
       <ImportCenter key={id} market={id === 'tiktok' ? 'TikTok' : 'Shopee'} />
     );
+  if (module === 'settings' && id === 'targets')
+    return <SettingsPage initialTab="Data Preferences" />;
   if (entities.includes(module as Entity))
     return <EntityDetail key={id} entity={module as Entity} id={id} />;
   notFound();

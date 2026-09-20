@@ -54,7 +54,13 @@ export type ImportJob = {
   mapping?: Record<string, string>;
   raw_rows?: Record<string, string>[];
   errors?: string[];
+  warnings?: string[];
   file_hash?: string;
+  source_type?: string;
+  sales_metric?: string;
+  sheet_name?: string;
+  period_start?: string;
+  period_end?: string;
 };
 export type Activity = {
   id: string;

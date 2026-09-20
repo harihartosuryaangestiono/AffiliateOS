@@ -1,5 +1,5 @@
 'use client';
-import { fileFingerprint, normalizeReport, applyImportedRows } from '@/lib/imports/normalize';
+import { fileFingerprint, normalizeReportDetailed, applyImportedRows } from '@/lib/imports/normalize';
 import { todayISO, shiftDate } from '@/lib/operations/engine';
 import { readReport } from '@/lib/imports/read-file';
 import { useState, useRef } from 'react';
@@ -26,7 +26,7 @@ import {
 import { useWorkspace } from '@/components/layout/workspace-provider';
 import { PlatformIcon } from '@/components/dashboard/dashboard';
 import { Status, Choice, EmptyState } from './shared';
-import { mappings, validateRows, type RawRow } from '@/lib/imports/validation';
+import { detectMapping, mappings, sourceSemantics, validateRows, type RawRow } from '@/lib/imports/validation';
 import type { ImportJob } from '@/types/domain';
 import { toast } from 'sonner';
 import { preserveDemoFile, readDemoFile } from '@/lib/data/demo-files';
@@ -42,7 +42,7 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
   const canImport = ['Admin','Affiliate Manager','Analyst'].includes(role);
   const validation = market
     ? validateRows(rows, mapping, market)
-    : { errors: [], valid: [] };
+    : { errors: [], warnings: [], issues: [], valid: [], skipped: 0 };
   const jobs = data.imports.filter((j) => !market || j.marketplace === market);
   async function readFile(f: File) {
     setError('');
@@ -52,28 +52,21 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
       setError('File format not supported. Choose a CSV or XLSX file.');
       return;
     }
-    if (f.size > 5 * 1024 * 1024) {
+    if (f.size > 50 * 1024 * 1024) {
       setError(
-        'Files must be smaller than 5 MB. Split larger reports into separate files.',
+        'Files must be smaller than 50 MB. Split larger reports into separate files.',
       );
       return;
     }
     setBusy(true);
     try {
-      const parsed = await readReport(f);
+      const parsed = await readReport(f, market);
       setFile(f);
       setRows(parsed);
       const headers = Object.keys(parsed[0]);
-      setMapping(
-        Object.fromEntries(
-          mappings[market!].map((f) => [
-            f.key,
-            headers.find(
-              (h) => h.toLowerCase().replaceAll(' ', '_') === f.key,
-            ) || '',
-          ]),
-        ),
-      );
+      const detected=detectMapping(headers,market!);
+      detected.__campaign_id=data.entities.campaigns.find(c=>c.marketplace===market||c.marketplace==='Multi-platform')?.id||'';
+      setMapping(detected);
       setStep(1);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not read this file.');
@@ -92,15 +85,24 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
         filename: file.name,
         created_at: new Date().toISOString(),
         rows: rows.length,
-        successful_rows: rows.length,
+        successful_rows: 0,
         failed_rows: rows.length - validation.valid.length,
-        status: 'Completed',
+        status: validation.issues.length ? 'Completed With Warnings' : 'Completed',
         file_hash: await fileFingerprint(file),
         mapping,
         raw_rows: rows,
         errors: validation.errors,
+        warnings: validation.warnings,
+        source_type: market+' Payment Order',
+        sales_metric: sourceSemantics[market],
       };
-      const normalized = normalizeReport(data, market, rows, mapping, job);
+      const detail = normalizeReportDetailed(data, market, rows, mapping, job);
+      if(!detail.normalized.length) throw Error('No matched valid rows are ready to process. Resolve creator and campaign mappings first.');
+      job.successful_rows=detail.validRows;
+      job.failed_rows=detail.skippedRows;
+      job.status=detail.issues.length?'Completed With Warnings':'Completed';
+      job.errors=detail.issues.filter(i=>i.severity==='ERROR').map(i=>`Row ${i.row}: ${i.message}`);
+      job.warnings=detail.issues.filter(i=>i.severity==='WARNING').map(i=>`Row ${i.row}: ${i.message}`);
       if (demo) await preserveDemoFile(job.id, file);
       if (!demo) {
         const payload = new FormData();
@@ -120,7 +122,7 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
         if (value.job) Object.assign(job, value.job);
       }
       setData({
-        ...applyImportedRows(data, job, normalized),
+        ...applyImportedRows(data, job, detail.normalized),
         activity: [
           {
             id: crypto.randomUUID(),
@@ -210,7 +212,7 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
               </p>
               <div className="flex items-center justify-between mt-6">
                 <span className="text-xs text-muted-foreground">
-                  CSV & XLSX · Up to 5 MB
+                  CSV & XLSX · Up to 50 MB
                 </span>
                 <ArrowRight size={18} />
               </div>
@@ -270,7 +272,7 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
                       : 'Drop your ' + market + ' report here'}
                   </strong>
                   <span>or click to browse your files</span>
-                  <small>CSV or XLSX · Maximum 5 MB · 10,000 rows</small>
+                  <small>CSV or XLSX · Maximum 50 MB · 50,000 rows</small>
                 </button>
                 {!canImport && (
                   <div className="info-notice">
@@ -297,6 +299,7 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
                     Change file
                   </Button>
                 </div>
+                <div className="info-notice">Detected schema: {market} Payment Order · Metric: {sourceSemantics[market]}. Original rows remain unchanged.</div>
                 <h2 className="mb-4">Preview</h2>
                 <div className="preview-table">
                   <Table>
@@ -323,6 +326,10 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
                   Match each destination field to a column in your report.
                   Amounts use plain IDR numbers.
                 </p>
+                <div className="mapping-row mb-4">
+                  <span>Default internal campaign <span className="text-blue-600">*</span></span><ArrowRight size={13}/>
+                  <Choice label="Default campaign" value={mapping.__campaign_id||''} onChange={v=>setMapping({...mapping,__campaign_id:v})} options={[{value:'',label:'Choose campaign'},...data.entities.campaigns.filter(c=>c.marketplace===market||c.marketplace==='Multi-platform').map(c=>({value:c.id,label:c.name}))]}/>
+                </div>
                 <div className="mapping-grid">
                   {mappings[market].map((f) => (
                     <div className="mapping-row" key={f.key}>
@@ -378,6 +385,8 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
                     </ul>
                   </div>
                 )}
+                {validation.warnings.length > 0 && <div className="info-notice"><strong>{validation.warnings.length} warnings</strong><p>Excluded, unmatched, or attention-required rows will not be attached silently.</p></div>}
+                {validation.issues.length>0&&<div className="ops-scroll"><table className="ops-table"><thead><tr><th>Level</th><th>Row</th><th>Field</th><th>Source value</th><th>Issue</th><th>Suggested action</th></tr></thead><tbody>{validation.issues.slice(0,50).map((i,n)=><tr key={n}><td><Status value={i.severity}/></td><td>{i.row}</td><td>{i.field}</td><td>{i.sourceValue||'—'}</td><td>{i.message}</td><td>{i.suggestedAction}</td></tr>)}</tbody></table></div>}
                 <div className="info-notice">
                   The original file and raw rows are preserved. Validated records are matched to marketplace accounts and campaigns, then processed together. Duplicate files and overlapping daily records are rejected without changing analytics.
                 </div>
@@ -385,7 +394,7 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
                   <Button variant="outline" onClick={() => setStep(1)}>
                     Back to mapping
                   </Button>
-                  <Button disabled={busy || !canImport || validation.errors.length > 0} onClick={stage}>
+                  <Button disabled={busy || !canImport || !mapping.__campaign_id || validation.valid.length===0 || validation.issues.some(i=>i.row===1&&i.severity==='ERROR')} onClick={stage}>
                     {busy && (
                       <LoaderCircle className="animate-spin" size={14} />
                     )}

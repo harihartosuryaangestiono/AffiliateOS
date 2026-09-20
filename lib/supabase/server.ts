@@ -1,13 +1,18 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-export const configured = () =>
-  Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_PUBLISHABLE_KEY);
+export const workspaceMode = () => process.env.AFFILIATEOS_MODE === 'production' ? 'production' : 'demo';
+const environment = () => ({
+  url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
+  key: process.env.SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+});
+export const configured = () => { const env=environment(); return Boolean(env.url&&env.key); };
 export async function supabase() {
   if (!configured()) throw Error('Supabase is not configured.');
+  const env=environment();
   const jar = await cookies();
   return createServerClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_PUBLISHABLE_KEY!,
+    env.url!,
+    env.key!,
     {
       cookies: {
         getAll: () => jar.getAll(),
