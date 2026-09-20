@@ -8,7 +8,7 @@ The supplied workbooks, internal tracker, client deck, and weekly document were 
 
 ## Supabase
 
-The browser/server clients support both the existing server variables and `NEXT_PUBLIC_SUPABASE_URL` with either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or the existing anon-key alias. No service-role key is used by client code. The supplied configuration was separated locally into an HTTPS Supabase API URL and a PostgreSQL `DATABASE_URL`, with `AFFILIATEOS_MODE=production`. The live Auth and REST endpoints respond correctly; anonymous profile access is denied. The project currently has no Auth user, workspace, or profile, so authenticated application CRUD still awaits first-admin provisioning.
+The browser/server clients support both the existing server variables and `NEXT_PUBLIC_SUPABASE_URL` with either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or the existing anon-key alias. No service-role key is used by client code. The supplied configuration was separated locally into an HTTPS Supabase API URL and a PostgreSQL `DATABASE_URL`, with `AFFILIATEOS_MODE=production`. The live Auth and REST endpoints respond correctly; anonymous profile access is denied. The production workspace now has two Auth-backed profiles: an Admin and an Affiliate Manager.
 
 ## Database
 
@@ -23,6 +23,8 @@ The same migrations were also applied to a fresh isolated PostgreSQL database, f
 Workspace-scoped read/write policies were verified in PostgreSQL for the new mapping, lineage, and metric-target tables. A second-workspace user could not read Phase 1.6 records. A Viewer could not mutate protected operational data. Existing role, immutable snapshot, stock history, and relationship checks also passed.
 
 Live Supabase RLS was tested inside a rolled-back transaction. The suite verified atomic import processing, multi-item order idempotency, raw-to-normalized lineage, reusable mappings, targets, Viewer mutation denial, and cross-workspace isolation. The transaction left zero QA users, workspaces, imports, and targets behind.
+
+The production memberships were also smoke-tested through the authenticated role. The Admin could create a workspace-scoped client, and the Affiliate Manager could read it through the shared-workspace policy. The transaction was rolled back and left no test client behind.
 
 ## Demo vs Production
 
@@ -74,15 +76,14 @@ Creator acquisition, outreach, campaign locking, HSL/SKU assignments, stock snap
 
 ## Deployment
 
-No production deployment is claimed. The live database foundation is installed, but the project has no Auth user or workspace membership, so an authenticated application workflow and real file upload cannot yet be verified. The previous Sites deployment attempt also returned an internal authentication-configuration 409 and was not bypassed or weakened.
+No production deployment is claimed. The live database foundation and initial workspace memberships are installed. Browser sign-in, authenticated CRUD, and a controlled real file upload remain to be verified with the users' own credentials. The previous Sites deployment attempt also returned an internal authentication-configuration 409 and was not bypassed or weakened.
 
 ## Known Limitations
 
-- BLOCKED — first Supabase Auth user and Admin workspace membership required.
-- Live authenticated file upload and application CRUD must be tested after the first Admin is provisioned.
+- Live authenticated file upload and application CRUD still require a browser session using a provisioned user's password.
 - Sites production publishing remains blocked by the existing authentication-configuration conflict.
 - Marketplace API ingestion, automatic WhatsApp broadcast, and automatic livestream stock sync are not part of the file-based Phase 1.6 pipeline.
 
 ## Coming Next
 
-Create the first user in Supabase Authentication and provide its email address. Assign that user to a new production workspace as Admin, then run browser sign-in, authenticated CRUD, controlled file upload, dashboard/report parity, and storage verification. Finally reconcile Sites authentication and deploy the verified production version.
+Sign in with a provisioned user, then run authenticated CRUD, a controlled file upload, dashboard/report parity, and storage verification. Finally reconcile Sites authentication and deploy the verified production version.
