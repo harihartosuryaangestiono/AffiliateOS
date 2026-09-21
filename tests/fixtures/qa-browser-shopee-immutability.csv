@@ -1,0 +1,2 @@
+Order id,Order Status,Verified Status,Order Time,Item id,Item Name,Model id,Purchase Value(Rp),Refund Amount(Rp),Qty,Affiliate Name,Affiliate Username,Item Brand Commission to Affiliate(Rp),Product clicks,Conversion rate
+SHP-QA-IMM-001,Completed,Valid,2026-09-18 15:00:00 +0700,QA-SHP-001,QA Product,QA-MODEL-A,10000,0,1,QA Creator,qa_browser_shopee,1000,10,0.10

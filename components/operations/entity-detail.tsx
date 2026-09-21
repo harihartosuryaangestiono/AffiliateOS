@@ -267,7 +267,9 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
                       <dt>{f.label}</dt>
                       <dd>
                         {f.key.includes('gmv')
-                          ? money(Number(record[f.key] || 0))
+                          ? record[f.key] === null || record[f.key] === undefined || record[f.key] === ''
+                            ? 'Not set'
+                            : money(Number(record[f.key]))
                           : displayValue(f.key, record, entity, data) || '—'}
                       </dd>
                     </div>

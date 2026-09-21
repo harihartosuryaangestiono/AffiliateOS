@@ -34,6 +34,9 @@ await test('Monday import changes only selected marketplace and rejects identica
  assert.ok(JSON.parse(String(snapshot)).metrics.sourceImportIds.includes(job.id));
  assert.equal(JSON.parse(String(snapshot)).sources.find((s:{id:string})=>s.id===job.id).filename,'qa.csv');
  assert.throws(()=>applyChanges(frozen,[{table:'reports',record:{...draft,status:'Draft'}}],'Admin','QA'),/cannot be reopened/);
+ const presented=applyChanges(frozen,[{table:'reports',record:{...records(frozen,'reports').find(r=>r.id===draft.id)!,status:'Presented'}}],'Admin','QA').data;
+ const archived=applyChanges(presented,[{table:'reports',record:{...records(presented,'reports').find(r=>r.id===draft.id)!,status:'Archived'}}],'Admin','QA').data;
+ assert.throws(()=>applyChanges(archived,[{table:'reports',record:{...records(archived,'reports').find(r=>r.id===draft.id)!,status:'Ready'}}],'Admin','QA'),/cannot move backwards/);
 });
 await test('HSL rejects mismatched account and campaign and supports stock impact through Peak Day',()=>{
  const hsl=records(data,'hsl_activations')[0];assert.ok(hsl);

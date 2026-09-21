@@ -37,7 +37,7 @@ end $$;
 select public.process_import_v16(
  '{"id":"40000000-0000-4000-8000-000000000008","marketplace":"Shopee","filename":"payment-order-demo.csv","status":"Completed With Warnings","successful_rows":2,"failed_rows":0,"mapping":{"order_id":"Order id","source_product_id":"Item id","source_item_id":"Model id"},"file_hash":"v16-hash","source_type":"Shopee Payment Order","sales_metric":"Purchase Value less Refund Amount from Shopee Payment Order"}',
  '{"path":"payment-order-demo.csv","size":200,"type":"text/csv"}',
- '[{"Order id":"SAME-ORDER","Item id":"ITEM-A","Model id":"MODEL-A"},{"Order id":"SAME-ORDER","Item id":"ITEM-B","Model id":"MODEL-B"}]',
+ '[{"Order id":"SAME-ORDER","Item id":"ITEM-A","Model id":"MODEL-A"},{"Order id":"SAME-ORDER","Item id":"ITEM-B","Model id":"MODEL-B"},{"Order id":"SAME-ORDER","Item id":"ITEM-A","Model id":"MODEL-A"}]',
  '[{"row":3,"field":"verified_status","severity":"WARNING","message":"Review verification status"}]',
  '[{"id":"40000000-0000-4000-8000-000000000009","account_id":"10000000-0000-4000-8000-000000000500","campaign_id":"10000000-0000-4000-8000-000000000032","product_id":"10000000-0000-4000-8000-000000000201","date":"2026-09-16","gmv":2000,"orders":2,"units_sold":2,"commission":0,"clicks":0,"conversion_rate":0}]',
  '[{"normalized_id":"40000000-0000-4000-8000-000000000009","raw_row_number":2,"source_order_id":"SAME-ORDER","source_product_id":"ITEM-A","status":"Normalized"},{"normalized_id":"40000000-0000-4000-8000-000000000009","raw_row_number":3,"source_order_id":"SAME-ORDER","source_product_id":"ITEM-B","status":"Normalized"}]'

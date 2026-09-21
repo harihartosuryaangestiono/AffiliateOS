@@ -14,7 +14,7 @@ import {
   LoaderCircle,
   Download,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Table,
   TableHeader,
@@ -466,6 +466,14 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
                     <Status value={j.status} />
                   </TableCell>
                   <TableCell>
+                    {!demo && (
+                      <a
+                        className={buttonVariants({ variant: 'ghost' })}
+                        href={`/api/imports/${j.id}/file`}
+                      >
+                        Original file
+                      </a>
+                    )}
                     {j.raw_rows && demo && (
                       <Button
                         variant="ghost"
@@ -518,11 +526,11 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
                       >
                         Download audit
                       </Button>
-                    ) : (
+                    ) : demo ? (
                       <span className="text-xs text-muted-foreground">
                         Seed data
                       </span>
-                    )}
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))}

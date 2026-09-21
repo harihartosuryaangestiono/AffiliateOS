@@ -80,6 +80,12 @@ export async function POST(req: Request) {
       normalization_results: detail.lineage,
     });
     if (error) {
+      console.error('AffiliateOS import transaction failed', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
       await db.storage.from('workspace-files').remove([path]);
       throw Error('Import could not be saved. No analytics were changed.');
     }

@@ -31,7 +31,14 @@ export function applyChanges(data:WorkspaceData,changes:Change[],role:Role,actor
  if(operationConfig[table]?.immutable&&old)throw Error('Historical records are immutable. Add a new record instead.');
  let r=remove?change.record:parseOperation(table,{...change.record,created_at:old?.created_at||now,updated_at:now});
  if(remove){const all=[...Object.values(next.entities).flat(),...Object.values(next.operations||{}).flat(),...records(next,'campaign_creators')];if(all.some(x=>x.id!==r.id&&Object.entries(x).some(([k,v])=>k.endsWith('_id')&&v===r.id)))throw Error('Remove related records before deleting.');}
- if(table==='reports'&&old?.finalized_at){if(remove)throw Error('Finalized reports cannot be deleted.');if(!['Ready','Presented','Archived'].includes(r.status))throw Error('Finalized reports cannot be reopened.');r={...old,status:r.status,updated_at:now};}
+ if(table==='reports'&&old?.finalized_at){
+   if(remove)throw Error('Finalized reports cannot be deleted.');
+   const statuses=['Ready','Presented','Archived'];
+   const previous=statuses.indexOf(String(old.status)),nextStatus=statuses.indexOf(String(r.status));
+   if(nextStatus<0)throw Error('Finalized reports cannot be reopened.');
+   if(previous>=0&&nextStatus<previous)throw Error('Finalized report status cannot move backwards.');
+   r={...old,status:r.status,updated_at:now};
+ }
  else if(table==='reports'){r.status='Draft';r.finalized_at=null;}
  if(!remove){for(const field of operationConfig[table].fields){const value=r[field.key];if(field.relation&&value&&!records(next,field.relation).some(x=>x.id===value))throw Error(`Choose a valid ${field.label.toLowerCase()}.`);}
  if(table==='hsl_activations'){if(records(next,'shopee_accounts').find(a=>a.id===r.shopee_account_id)?.creator_id!==r.creator_id)throw Error('Shopee account must belong to the selected creator.');if(next.entities.campaigns.find(c=>c.id===r.campaign_id)?.marketplace==='TikTok')throw Error('HSL requires a Shopee or multi-platform campaign.');}
