@@ -1,0 +1,10 @@
+Order ID,Product ID,Product Name,SKU ID,Payment Amount,Currency,Quantity,Fully returned or refunded,Order Status,Creator Username,Content Type,Actual Commission Payment,Payment time
+TT-QA-001,QA-TT-001,QA Product,QA-TT-SKU-A,120000,IDR,2,No,Completed,qa_browser_tiktok,Video,12000,19/09/2026 10:00
+TT-QA-002,QA-TT-001,QA Product,QA-TT-SKU-A,60000,IDR,1,No,Completed,qa_browser_tiktok,Live,6000,19/09/2026 10:10
+TT-QA-003,QA-TT-001,QA Product,QA-TT-SKU-A,35000,IDR,1,No,Completed,qa_browser_tiktok,Video,3500,19/09/2026 10:20
+TT-QA-003,QA-TT-001,QA Product,QA-TT-SKU-B,15000,IDR,1,No,Completed,qa_browser_tiktok,Video,1500,19/09/2026 10:20
+TT-QA-004,QA-TT-001,QA Product,QA-TT-SKU-A,50000,IDR,1,Yes,Refunded,qa_browser_tiktok,Live,5000,19/09/2026 10:30
+TT-QA-005,QA-TT-001,QA Product,QA-TT-SKU-A,10000,IDR,1,No,Completed,qa_browser_tiktok,Video,1000,not-a-date
+TT-QA-006,QA-TT-001,QA Product,QA-TT-SKU-A,20000,IDR,1,No,Completed,qa_unknown_tiktok,Video,2000,19/09/2026 10:40
+TT-QA-007,QA-TT-UNKNOWN,Unknown Product,QA-TT-SKU-X,30000,IDR,1,No,Completed,qa_browser_tiktok,Video,3000,19/09/2026 10:50
+TT-QA-001,QA-TT-001,QA Product,QA-TT-SKU-A,120000,IDR,2,No,Completed,qa_browser_tiktok,Video,12000,19/09/2026 10:00

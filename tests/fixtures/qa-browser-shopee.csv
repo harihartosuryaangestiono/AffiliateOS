@@ -1,0 +1,10 @@
+Order id,Order Status,Verified Status,Order Time,Item id,Item Name,Model id,Purchase Value(Rp),Refund Amount(Rp),Qty,Affiliate Name,Affiliate Username,Item Brand Commission to Affiliate(Rp),Product clicks,Conversion rate
+SHP-QA-001,Completed,Valid,2026-09-19 09:00:00 +0700,QA-SHP-001,QA Product,QA-MODEL-A,100000,0,2,QA Creator,qa_browser_shopee,10000,100,0.02
+SHP-QA-002,Completed,Valid,2026-09-19 09:10:00 +0700,QA-SHP-001,QA Product,QA-MODEL-A,50000,0,1,QA Creator,qa_browser_shopee,5000,50,0.02
+SHP-QA-003,Completed,Valid,2026-09-19 09:20:00 +0700,QA-SHP-001,QA Product,QA-MODEL-A,30000,0,1,QA Creator,qa_browser_shopee,3000,30,0.02
+SHP-QA-003,Completed,Valid,2026-09-19 09:20:00 +0700,QA-SHP-001,QA Product,QA-MODEL-B,20000,0,1,QA Creator,qa_browser_shopee,2000,20,0.02
+SHP-QA-004,Cancelled,Invalid,2026-09-19 09:30:00 +0700,QA-SHP-001,QA Product,QA-MODEL-A,40000,40000,1,QA Creator,qa_browser_shopee,0,0,0
+SHP-QA-005,Completed,Valid,not-a-date,QA-SHP-001,QA Product,QA-MODEL-A,10000,0,1,QA Creator,qa_browser_shopee,1000,10,0.02
+SHP-QA-006,Completed,Valid,2026-09-19 09:40:00 +0700,QA-SHP-001,QA Product,QA-MODEL-A,15000,0,1,Unknown Creator,qa_unknown_shopee,1500,15,0.02
+SHP-QA-007,Completed,Valid,2026-09-19 09:50:00 +0700,QA-SHP-UNKNOWN,Unknown Product,QA-MODEL-X,25000,0,1,QA Creator,qa_browser_shopee,2500,25,0.02
+SHP-QA-001,Completed,Valid,2026-09-19 09:00:00 +0700,QA-SHP-001,QA Product,QA-MODEL-A,100000,0,2,QA Creator,qa_browser_shopee,10000,100,0.02

@@ -5,7 +5,8 @@ import { metrics, todayISO } from './engine.ts';
 export type Change={table:string;record:RecordData;remove?:boolean};
 export function parseOperation(table:string,input:RecordData){
  const cfg=operationConfig[table];if(!cfg)throw Error('Unknown operation.');
- const shape:Record<string,z.ZodType>={id:z.uuid(),name:z.string().max(500).optional(),status:z.string().max(80).optional(),created_at:z.iso.datetime().optional(),updated_at:z.iso.datetime().optional(),locked_at:z.string().nullable().optional(),locked_by:z.string().nullable().optional(),finalized_at:z.string().nullable().optional()};
+ const timestamp=z.iso.datetime({offset:true});
+ const shape:Record<string,z.ZodType>={id:z.uuid(),name:z.string().max(500).optional(),status:z.string().max(80).optional(),created_at:timestamp.optional(),updated_at:timestamp.optional(),locked_at:z.string().nullable().optional(),locked_by:z.string().nullable().optional(),finalized_at:z.string().nullable().optional()};
  for(const f of cfg.fields){let field:z.ZodType=f.relation?z.uuid():f.type==='number'?z.number().min(f.min??0).max(f.max??Number.MAX_SAFE_INTEGER):f.type==='date'?z.iso.date():f.options?z.enum(f.options as [string,...string[]]):z.string().trim().max(10000);if(f.required&&f.type!=='number'&&f.type!=='date'&&!f.relation&&!f.options)field=z.string().trim().min(1).max(10000);if(!f.required)field=z.union([field,z.literal(''),z.null()]).optional();shape[f.key]=field;}
  const result=z.object(shape).safeParse(input);if(!result.success)throw Error(result.error.issues.map(i=>i.path.join('.')+': '+i.message).join(' · '));
  const r=result.data as RecordData;

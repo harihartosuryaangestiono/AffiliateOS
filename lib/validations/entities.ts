@@ -4,8 +4,8 @@ import type { Entity } from '@/types/domain';
 export function entitySchema(entity: Entity) {
   const fields: Record<string, z.ZodType> = {
     id: z.uuid(),
-    created_at: z.iso.datetime().optional(),
-    updated_at: z.iso.datetime().optional(),
+    created_at: z.iso.datetime({ offset: true }).optional(),
+    updated_at: z.iso.datetime({ offset: true }).optional(),
   };
   for (const f of config[entity].fields) {
     let schema: z.ZodType =

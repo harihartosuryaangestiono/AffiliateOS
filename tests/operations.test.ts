@@ -49,6 +49,10 @@ await test('Sample transitions persist timestamps and resolve overdue alerts on 
  const updated=applyChanges(data,[{table:'sample_seedings',record:{...sample,status:'Activated'}}],'Affiliate Manager','QA',now.toISOString()).data;
  assert.equal(records(updated,'sample_seedings')[0].activated_at,'2026-09-19');assert.ok(!operationalAlerts(updated,now).some(a=>a.entity_id===sample.id&&a.type==='SAMPLE_DELAY'));
 });
+await test('Production timestamp offsets remain valid during workflow updates',()=>{
+ const sample=records(data,'sample_seedings')[0],withOffset={...sample,created_at:'2026-09-19T08:00:00+00:00',status:'Approved'};
+ assert.doesNotThrow(()=>applyChanges({...data,operations:{...data.operations,sample_seedings:[withOffset]}},[{table:'sample_seedings',record:withOffset}],'Affiliate Manager','QA',now.toISOString()));
+});
 await test('Read-only roles, relationship duplicates, invalid values and immutable stock history are rejected',()=>{
  const stock=records(data,'product_stock_snapshots')[0];assert.throws(()=>applyChanges(data,[{table:'product_stock_snapshots',record:stock}],'Viewer','QA'),/role/);assert.throws(()=>applyChanges(data,[{table:'product_stock_snapshots',record:stock}],'Admin','QA'),/immutable/);
  assert.throws(()=>applyChanges(data,[{table:'product_stock_snapshots',record:{...stock,id:uid(9970),stock_quantity:-1}}],'Admin','QA'),/stock_quantity/);

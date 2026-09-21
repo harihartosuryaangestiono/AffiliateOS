@@ -47,7 +47,7 @@ async function mutate(request: Request, params: Promise<{ entity: string }>) {
       updated_at: new Date().toISOString(),
     };
     for (const f of Object.keys(payload)) {
-      if (f.endsWith('_id') && payload[f as keyof typeof payload] === '')
+      if (payload[f as keyof typeof payload] === '')
         Object.assign(payload, { [f]: null });
     }
     const query =
