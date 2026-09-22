@@ -2,7 +2,7 @@
 
 Date: 2026-09-22 (Asia/Jakarta)
 
-This audit records browser acceptance against the live AffiliateOS Supabase workspace. Production readiness remains **BLOCKED** by deployment and database-password rotation. Application acceptance, including Affiliate Manager, Acquisition, and Outreach coverage, is complete. Phase 1.7 was not started. The operational Dinda workbooks were not uploaded or modified.
+This audit records browser acceptance against the live AffiliateOS Supabase workspace. The application has been deployed successfully, but final deployed-environment acceptance remains **BLOCKED** by Supabase Auth URL administration, unavailable deployed Admin/Affiliate Manager application sessions, and verification that the previous database password is rejected. Local application acceptance, including Affiliate Manager, Acquisition, and Outreach coverage, is complete. Phase 1.7 was not started. The operational Dinda workbooks were not uploaded or modified.
 
 ## Environment — PASS
 
@@ -188,17 +188,30 @@ At 390 × 844, Dashboard, creator search, My Work, Outreach, Stock Watch, and re
 
 The normal laptop viewport covered Dashboard, CRUD forms, campaign tabs, HSL, Stock Watch, Samples, Acquisition, Outreach, My Work, reports, Import Center, and Peak Day. The route smoke suite passes.
 
-## Deployment — BLOCKED
+## Deployment — PASS
 
-- Deployment was not retried in this pass. The prior provider publish returned an authentication-configuration HTTP 409 and no production hostname was issued.
-- No authentication, RLS, middleware, or storage control was weakened.
-- Exact Supabase Site URL and Redirect URLs cannot be finalized until a production hostname exists.
+- Sites version 3 was built from commit `314d0d118c0dff27f72b90c7c8bf2d6553631ed7`, saved with its validated archive, and deployed with production environment revision 1.
+- Production runtime values contain only `AFFILIATEOS_MODE`, the Supabase HTTPS URL, and the Supabase publishable key. `DATABASE_URL` and service-role credentials were not deployed.
+- Both earlier deployments failed before a provider deployment ID was created. Their failures came from HTTP 409 responses while Sites registered callback metadata for the same SIWC auth client. The new deployment passed that registration step, received provider deployment ID `site---6aa02da31dc08191a0822e46bf361d44`, and completed successfully. This isolates the prior blocker to provider-side SIWC callback-registration conflict/idempotency rather than the application build.
+- No authentication, RLS, middleware, storage policy, or Site audience was weakened.
 
-Production URL: BLOCKED
+Production URL: `https://affiliateos-hari.hariharto-surya.chatgpt.site`
 
 ## Secret Rotation — BLOCKED
 
-The previously exposed database password has not been rotated. Rotation requires user handoff in Supabase, updating authorized `DATABASE_URL` environments, and verifying the old password is rejected. No password is recorded here.
+- Authorized PostgreSQL tooling connects successfully with the current local `DATABASE_URL`, and the local production-mode application continues to load the Supabase workspace.
+- The previous credential was not re-entered into a command, file, or log. Its rejection could not be tested through a secret-input mechanism in this session, so the old-credential rejection gate remains unverified.
+- No password is recorded in this audit.
+
+## Deployed Environment Acceptance — BLOCKED
+
+- Private Sites authentication completed for the Site owner and persisted while navigating the production origin.
+- The deployed AffiliateOS login page rendered correctly. Direct unauthenticated navigation to the archived QA report redirected to `/login`.
+- A private-header deployed route smoke test passed all 30 application routes plus the unknown workspace route redirect to `/login`.
+- Recent production Worker error logs are empty.
+- Supabase Auth Site URL and Redirect URLs are not yet updated. The available Supabase Dashboard browser session belongs to an account without access to the AffiliateOS project, so the production origin and required localhost origins could not be saved or verified.
+- No deployed AffiliateOS Admin or Affiliate Manager session was available. Login/logout, authenticated refresh persistence, workspace roles, CRUD, RLS, private storage, Import Center, existing controlled import context, Dashboard/H-2, reports/lineage, HSL/Stock, Acquisition/Outreach, Peak Day, and full authenticated mobile/desktop layout remain blocked on those sessions.
+- Existing QA production context was not deleted, reset, reseeded, or duplicated.
 
 ## Regression — PASS
 
@@ -207,6 +220,7 @@ The previously exposed database password has not been rotated. Rotation requires
 - Automated: PASS (16/16, `npm test`)
 - Routes: PASS (30 application routes plus unauthenticated unknown-route redirect)
 - Build: PASS (`npm run build`)
+- Deployed routes: PASS (30 application routes plus unknown-route redirect through the private production origin)
 - Affiliate Manager RLS probe: PASS and rolled back without changing production data.
 - Isolated seeded database suite: not rerun against production; live additive migration behavior is proven by the completed imports.
 
@@ -220,7 +234,8 @@ The previously exposed database password has not been rotated. Rotation requires
 
 ## Remaining Blockers
 
-1. Rotate the Supabase database password through user handoff and verify the old password fails.
-2. Resolve the provider-specific deployment HTTP 409, obtain the production origin, configure narrow Supabase Auth URLs, and run deployed acceptance.
+1. Open an authenticated Supabase Dashboard session that has access to project `gevjwunwrupeebochswz`, then set the Site URL to the production origin and preserve only the required production and localhost Redirect URLs.
+2. Provide authenticated deployed AffiliateOS sessions for the Admin and Affiliate Manager so the production CRUD, RLS, storage, import, workflow, and responsive-layout gates can run without resetting or duplicating QA data.
+3. Verify rejection of the previous database password through a secret-safe mechanism, if one is available.
 
 Full production readiness remains **BLOCKED** until these items pass. Phase 1.7 has not begun.
