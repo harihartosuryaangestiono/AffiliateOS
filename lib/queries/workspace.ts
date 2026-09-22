@@ -43,7 +43,10 @@ export async function loadWorkspace() {
           .eq('workspace_id', profile.workspace_id)
           .order('id')
           .range(offset, offset + 999);
-        if (error) return { data: null, error };
+        if (error) {
+          if (['brand_mappings', 'report_datasets'].includes(table)) return { data: [], error: null };
+          return { data: null, error };
+        }
         all.push(...(data || []));
         if ((data?.length || 0) < 1000) return { data: all, error: null };
       }
