@@ -1,8 +1,8 @@
 # Production Browser Acceptance
 
-Date: 2026-09-21 (Asia/Jakarta)
+Date: 2026-09-22 (Asia/Jakarta)
 
-This audit records browser acceptance against the live AffiliateOS Supabase workspace. Production readiness remains **BLOCKED** by the Affiliate Manager role session, incomplete Acquisition / Outreach coverage, deployment, and database-password rotation. Phase 1.7 was not started. The operational Dinda workbooks were not uploaded or modified.
+This audit records browser acceptance against the live AffiliateOS Supabase workspace. Production readiness remains **BLOCKED** by deployment and database-password rotation. Application acceptance, including Affiliate Manager, Acquisition, and Outreach coverage, is complete. Phase 1.7 was not started. The operational Dinda workbooks were not uploaded or modified.
 
 ## Environment — PASS
 
@@ -19,11 +19,14 @@ This audit records browser acceptance against the live AffiliateOS Supabase work
 - Logout clears the session, returns to `/login`, and a direct visit to `/dashboard` then redirects to `/login`.
 - The route smoke test independently verifies the unauthenticated redirect.
 
-## Roles — BLOCKED
+## Roles — PASS
 
-- Admin role and workspace membership are visibly correct.
+- Admin role and workspace membership remain correct.
+- The authenticated browser session visibly identified Dinda Victoria as an `Affiliate Manager` in `AffiliateOS Workspace`; direct profile navigation and refresh preserved that identity and membership.
+- Through the real UI, the Affiliate Manager created the controlled QA prospect, advanced acquisition stages, created and updated Outreach, and persisted the contact, response, follow-up, and conversion records.
+- Admin-only workspace threshold controls remained disabled. A rollback-only PostgreSQL acceptance transaction impersonated the authenticated Affiliate Manager JWT subject and proved that `clients` INSERT was rejected by RLS with SQLSTATE `42501`, `workspace_preferences` UPDATE affected zero writable rows, and profile-role escalation was rejected by column privilege/RLS with SQLSTATE `42501`.
 - Live RLS remains enabled for every public table and the private bucket remains private.
-- Affiliate Manager browser mutation coverage remains blocked because no authorized Affiliate Manager browser session was available. No password was read, reset, printed, or placed in source.
+- No password, browser cookie, or access token was read, reset, printed, or placed in source.
 
 ## CRUD — PASS
 
@@ -33,6 +36,7 @@ The following clearly tagged records were created or edited through the browser 
 - `QA — Browser Acceptance Brand`
 - two QA products
 - `QA — Browser Acceptance Creator` and separate marketplace accounts
+- `QA — Affiliate Manager Lifecycle`, created by the Affiliate Manager for controlled lifecycle acceptance
 - Shopee and TikTok QA campaigns
 - QA task, HSL, stock snapshots, sample, outreach, report, and Peak Day records
 
@@ -142,16 +146,14 @@ For the immutability test, `tests/fixtures/qa-browser-shopee-immutability.csv` l
 - The QA sample progressed through Proposed → Approved → Preparing → Shipped → Received → Activation Pending → Activated.
 - Representative transitions survived refresh and activity identifies the Admin actor.
 
-## Acquisition / Outreach — BLOCKED
+## Acquisition / Outreach — PASS
 
-Completed evidence:
-
-- Creator moved Prospect → Contacted.
-- Synthetic WhatsApp outreach was created without sending a message.
-- Template preview rendered variables and disabled WhatsApp because no phone number exists.
-- Contact timestamp and follow-up context persisted.
-
-Remaining coverage for Responded → Interested → Locked → Activated and full response/follow-up progression was not completed in this pass.
+- The Affiliate Manager created `QA — Affiliate Manager Lifecycle` as a synthetic Prospect through the Acquisition UI.
+- Acquisition completed in order: Prospect → Contacted → Responded → Interested → Locked → Activated.
+- The persisted acquisition-event rows contain all six stages in that order and identify Dinda Victoria as the actor.
+- Synthetic WhatsApp Outreach was created without sending an external message. Its response progressed No Response → Replied → Follow Up → Interested → Converted.
+- Contact date `2026-09-21` and follow-up date `2026-09-24` were saved through the UI. The final Outreach status is Converted and the creator stage is Activated.
+- Direct navigation, full reload, Acquisition, creator Overview, creator Outreach, and creator Activity all retained the final state. Activity history identifies Dinda Victoria for the creator insert and subsequent transitions.
 
 ## Peak Day — PASS
 
@@ -169,7 +171,8 @@ Remaining coverage for Responded → Interested → Locked → Activated and ful
 
 - Every public production table remains RLS-enabled; the private bucket remains private.
 - Existing live acceptance verifies anonymous profile denial, cross-workspace isolation, and viewer mutation rejection.
-- The rollback-only seeded SQL suite was not rerun against production.
+- A production rollback-only role probe used the live Affiliate Manager profile as the authenticated JWT subject. Backend policies rejected an Admin-only client insert, workspace-preference update, and self role escalation; the transaction ended with `ROLLBACK` and left no records.
+- Affiliate Manager operational writes remained accepted through the application UI while these Admin-only writes remained rejected by PostgreSQL, so no RLS or authentication rule was weakened.
 
 ## Error Experience — PASS
 
@@ -204,6 +207,7 @@ The previously exposed database password has not been rotated. Rotation requires
 - Automated: PASS (16/16, `npm test`)
 - Routes: PASS (30 application routes plus unauthenticated unknown-route redirect)
 - Build: PASS (`npm run build`)
+- Affiliate Manager RLS probe: PASS and rolled back without changing production data.
 - Isolated seeded database suite: not rerun against production; live additive migration behavior is proven by the completed imports.
 
 ## Production Data Integrity — PASS
@@ -216,9 +220,7 @@ The previously exposed database password has not been rotated. Rotation requires
 
 ## Remaining Blockers
 
-1. Provide an already signed-in Affiliate Manager browser session to complete role-specific mutation coverage without sharing a password.
-2. Complete the remaining Acquisition / Outreach state progression.
-3. Rotate the Supabase database password through user handoff and verify the old password fails.
-4. Resolve the provider-specific deployment HTTP 409, obtain the production origin, configure narrow Supabase Auth URLs, and run deployed acceptance.
+1. Rotate the Supabase database password through user handoff and verify the old password fails.
+2. Resolve the provider-specific deployment HTTP 409, obtain the production origin, configure narrow Supabase Auth URLs, and run deployed acceptance.
 
 Full production readiness remains **BLOCKED** until these items pass. Phase 1.7 has not begun.
