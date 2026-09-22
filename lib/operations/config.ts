@@ -29,6 +29,7 @@ export const operationConfig:Record<string,OpConfig> = {
   metric_targets:{title:'Metric targets',singular:'Metric target',fields:[rel('client_id','Client','clients',false),rel('brand_id','Brand','brands',false),rel('campaign_id','Campaign','campaigns',false),choice('marketplace','Marketplace',['Shopee','TikTok','Multi-platform']),choice('metric','Metric',['Affiliate GMV','Affiliates With Sales','Orders','Units Sold']),date('period_start','Period start',true),date('period_end','Period end',true),f('target_value','Target value',{type:'number',required:true,min:0})],columns:['metric','marketplace','period_start','period_end','target_value']},
   workspace_preferences:{title:'Operational thresholds',singular:'Threshold settings',fields:[f('name','Settings name',{required:true}),f('growth_threshold','Growing above (%)',{type:'number',min:0}),f('decline_threshold','Declining below (%)',{type:'number',min:-100,max:0}),f('critical_threshold','Critical below (%)',{type:'number',min:-100,max:0}),num('inactivity_days','Inactivity days'),num('low_stock','Low stock at or below'),num('critical_stock','Critical stock at or below'),num('sample_days','Days after receipt before alert'),num('cutoff_days','Reporting cutoff lag (days)')],columns:['name','low_stock','critical_stock','sample_days','cutoff_days']},
   operational_alerts:{title:'Alert history',singular:'Alert',fields:[f('alert_type','Type'),f('entity_type','Entity'),f('entity_id','Record ID'),f('message','Message'),choice('severity','Severity',['Info','Warning','Critical']),date('resolved_at','Resolved date')],columns:['alert_type','severity','message','resolved_at']},
+  business_rules:{title:'Business rules',singular:'Business rule',immutable:true,fields:[],columns:['rule_key','name','marketplace','scope_type','version','status']},
 };
 operationConfig.tasks={...entityConfig.tasks,fields:entityConfig.tasks.fields};
 export const operationTables = Object.keys(operationConfig).filter(t=>t!=='tasks');
@@ -39,6 +40,7 @@ export function records(data:WorkspaceData,table:string):RecordData[] {
   return data.operations?.[table] || [];
 }
 export function canOperate(role:Role, table:string){
+  if(table==='business_rules') return false;
   if(role==='Admin') return true;
   if(table==='workspace_preferences') return false;
   if(['reports','report_snapshots'].includes(table)) return role==='Analyst'||role==='Affiliate Manager';

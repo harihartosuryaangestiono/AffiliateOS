@@ -29,3 +29,18 @@ Statuses mean: **CONFIRMED** reproduces an available historical output; **PROVIS
 | `common.growth`                 | Growth                     | Both        | Current metric / comparable prior period - 1                        | Same metric definition and comparable cutoff                                                                                                    | Period aggregate                                      | Missing when comparable period is unavailable                 | BUSINESS_CONFIRMATION_REQUIRED                                       |
 
 The Phase 1.6 Shopee import currently uses `Purchase Value - Refund Amount`. That behavior remains unchanged because one historical Simba period is not sufficient evidence to redefine operational production metrics. The historical parser keeps the observed gross-purchase rule isolated and explicit.
+
+## Operational business-rule links
+
+This document remains the historical evidence record. The database is the operational confirmation source, and all linked rules are currently `OPEN`:
+
+- `shopee.affiliate_gmv` → BQ-01
+- Shopee reporting date → BQ-02
+- `shopee.quantity` → BQ-03
+- TikTok reporting date → BQ-04
+- `tiktok.commission` → BQ-05
+- `common.store_revenue` and target ownership → BQ-06
+- `common.growth` comparable period → BQ-07
+- cross-marketplace creator reporting identity → BQ-08
+
+An applicable confirmed database rule produces the internal status `CONFIRMED`; an OPEN or DEFERRED rule produces `BUSINESS_CONFIRMATION_REQUIRED`; no applicable governance rule produces `PROVISIONAL`. `SOURCE_UNAVAILABLE` remains a data-availability state and must not be converted to zero. Finalized snapshots retain their captured rule/version metadata even after a later version becomes effective.

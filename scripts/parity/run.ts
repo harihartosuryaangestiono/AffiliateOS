@@ -10,11 +10,15 @@ import {
 import { reconcileMetrics } from '../../lib/parity/reconcile.ts';
 
 const args = process.argv.slice(2),
-  workbookArg = args.find((arg) => !arg.startsWith('--'));
+  workbookArg = args[0];
 if (!workbookArg)
   throw new Error(
-    'Usage: npm run parity -- <Catatan Dinda workbook.xlsx> [--out directory]',
+    'Usage: npm run parity -- <workbook.xlsx> [--manifest parity-manifest.json] [--out directory]',
   );
+const flag = (name: string) => {
+  const index = args.indexOf(name);
+  return index >= 0 ? args[index + 1] : undefined;
+};
 const outFlag = args.indexOf('--out'),
   outDir = path.resolve(outFlag >= 0 ? args[outFlag + 1] : 'artifacts/parity');
 const workbook = new ExcelJS.Workbook();
@@ -47,35 +51,32 @@ const shopee = toRows('Raw - Shopee')
 const tiktok = toRows('Raw - TikTok')
   .map((row, index) => parseTikTokHistoricalRow(row, index + 2))
   .filter((row) => row !== null);
-const period = { start: '2026-08-01', end: '2026-08-06' };
+type Manifest = {
+  period: { start: string; end: string };
+  references: Record<'Shopee' | 'TikTok', Record<string, number | null>>;
+};
+const builtIn: Manifest = {
+  period: { start: '2026-08-01', end: '2026-08-06' },
+  references: {
+    Shopee: { affiliateGmv:23953515,quantity:420,totalAffiliates:195,affiliatesWithSales:176,commission:1206226,asp:57032.1785714286,roi:19.858229,costRatio:0.05035699 },
+    TikTok: { affiliateGmv:21530544,quantity:455,totalAffiliates:131,affiliatesWithSales:119,commission:1399944,asp:47319.8769230769,roi:15.379575,costRatio:0.0650213 },
+  },
+};
+const manifestPath = flag('--manifest');
+const manifest: Manifest = manifestPath ? JSON.parse(await fs.readFile(path.resolve(manifestPath), 'utf8')) as Manifest : builtIn;
+if (!manifest.period?.start || !manifest.period?.end || !manifest.references?.Shopee || !manifest.references?.TikTok)
+  throw new Error('Parity manifest must include period.start, period.end, and Shopee/TikTok references.');
+const period = manifest.period;
 const suites = [
   {
     marketplace: 'Shopee' as const,
     actual: aggregateHistorical(shopee, period),
-    reference: {
-      affiliateGmv: 23953515,
-      quantity: 420,
-      totalAffiliates: 195,
-      affiliatesWithSales: 176,
-      commission: 1206226,
-      asp: 57032.1785714286,
-      roi: 19.858229,
-      costRatio: 0.05035699,
-    },
+    reference: manifest.references.Shopee,
   },
   {
     marketplace: 'TikTok' as const,
     actual: aggregateHistorical(tiktok, period),
-    reference: {
-      affiliateGmv: 21530544,
-      quantity: 455,
-      totalAffiliates: 131,
-      affiliatesWithSales: 119,
-      commission: 1399944,
-      asp: 47319.8769230769,
-      roi: 15.379575,
-      costRatio: 0.0650213,
-    },
+    reference: manifest.references.TikTok,
   },
 ];
 const results = suites.flatMap((suite) =>
@@ -94,6 +95,7 @@ await fs.writeFile(
     {
       generatedAt: new Date().toISOString(),
       workbook: path.basename(workbookArg),
+      manifest: manifestPath ? path.basename(manifestPath) : 'built-in validated 2026-08-01–06 reference',
       period,
       results,
     },

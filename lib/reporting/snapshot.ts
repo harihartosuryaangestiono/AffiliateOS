@@ -8,6 +8,18 @@ export type FrozenReportSnapshot = {
   narrative?: Record<string, string | null | undefined>;
   finalized_by?: string;
   template?: { id: string; version: string; name: string };
+  business_rules?: Array<{
+    id: string;
+    ruleKey: string;
+    canonicalMetricId: string;
+    status: string;
+    selectedDefinition: string | null;
+    scopeType: string;
+    marketplace: string;
+    version: number;
+    effectiveFrom: string | null;
+    effectiveUntil: string | null;
+  }>;
 };
 
 const aliases: Record<string, string[]> = {

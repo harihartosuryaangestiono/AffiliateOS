@@ -27,6 +27,7 @@ import { PlatformIcon } from '@/components/dashboard/dashboard';
 import { Status } from './shared';
 import { initials } from '@/lib/data/metrics';
 import { toast } from 'sonner';
+import { BusinessRules } from '@/components/workflows/business-rules';
 export function ReportsPage() {
   return (
     <>
@@ -160,6 +161,7 @@ export function SettingsPage({ initialTab }: { initialTab?: string } = {}) {
     'Import Configuration',
     'Users & Access',
     'Data Preferences',
+    'Business Rules',
     'Profile',
   ];
   const tab =
@@ -227,6 +229,7 @@ export function SettingsPage({ initialTab }: { initialTab?: string } = {}) {
             'Import Configuration',
             'Users & Access',
             'Data Preferences',
+            'Business Rules',
             'Profile',
           ].map((t) => (
             <TabsTrigger key={t} value={t}>
@@ -234,6 +237,9 @@ export function SettingsPage({ initialTab }: { initialTab?: string } = {}) {
             </TabsTrigger>
           ))}
         </TabsList>
+        <TabsContent value="Business Rules">
+          <BusinessRules />
+        </TabsContent>
         <TabsContent value="Workspace">
           <section className="panel detail-panel">
             <h2>Workspace information</h2>

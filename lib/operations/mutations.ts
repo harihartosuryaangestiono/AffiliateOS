@@ -3,6 +3,7 @@ import type { WorkspaceData, RecordData, Role } from '../../types/domain.ts';
 import { acquisitionStages, operationConfig, records, canOperate } from './config.ts';
 import { metrics, todayISO } from './engine.ts';
 import { templateFor } from '../reporting/templates.ts';
+import { snapshotBusinessRules } from '../reporting/business-rules.ts';
 export type Change={table:string;record:RecordData;remove?:boolean};
 export function parseOperation(table:string,input:RecordData){
  const cfg=operationConfig[table];if(!cfg)throw Error('Unknown operation.');
@@ -67,7 +68,8 @@ export function freezeReport(data:WorkspaceData,id:string,actor:string,now=new D
  const filter={campaign_id:report.campaign_id?String(report.campaign_id):undefined,client_id:report.client_id?String(report.client_id):undefined};
  const reportMetrics=metrics(data,period,String(report.marketplace),filter),sources=data.imports.filter(job=>reportMetrics.sourceImportIds.includes(job.id)).map(job=>({id:job.id,marketplace:job.marketplace,filename:job.filename,source_type:job.source_type,sales_metric:job.sales_metric,period_start:job.period_start,period_end:job.period_end,status:job.status}));
  const template=templateFor(String(report.report_type),String(report.marketplace));
- const snapshot={id:crypto.randomUUID(),name:report.name,status:'Final',created_at:now,report_id:report.id,snapshot_json:JSON.stringify({period,marketplace:report.marketplace,metrics:reportMetrics,TikTok:metrics(data,period,'TikTok',filter),Shopee:metrics(data,period,'Shopee',filter),sources,narrative:{what_went_well:report.what_went_well,issues:report.issues,next_action:report.next_action},finalized_by:actor,template:{id:template.id,version:template.version,name:template.name}})};
+ const businessRules=snapshotBusinessRules(data,{marketplace:String(report.marketplace),clientId:report.client_id?String(report.client_id):undefined,templateId:template.id,asOf:end});
+ const snapshot={id:crypto.randomUUID(),name:report.name,status:'Final',created_at:now,report_id:report.id,snapshot_json:JSON.stringify({period,marketplace:report.marketplace,metrics:reportMetrics,TikTok:metrics(data,period,'TikTok',filter),Shopee:metrics(data,period,'Shopee',filter),sources,narrative:{what_went_well:report.what_went_well,issues:report.issues,next_action:report.next_action},finalized_by:actor,template:{id:template.id,version:template.version,name:template.name},business_rules:businessRules})};
  const finalized={...report,status:'Ready',finalized_at:now};
  return {data:putRecord(putRecord(data,'report_snapshots',snapshot),'reports',finalized),changes:[{table:'report_snapshots',record:snapshot},{table:'reports',record:finalized}]};
 }
