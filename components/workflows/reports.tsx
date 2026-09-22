@@ -10,28 +10,345 @@ import { money } from '@/lib/data/metrics';
 import { toast } from 'sonner';
 import { metricConfirmationStatus, snapshotMetricStatus } from '@/lib/reporting/business-rules';
 import { templateFor } from '@/lib/reporting/templates';
+import { buildReportDataset, type ReportDataset } from '@/lib/reporting/datamart';
 
-type SourceLineage = { id:string; marketplace:string; filename?:string; source_type?:string; sales_metric?:string; period_start?:string; period_end?:string; status:string };
+type SourceLineage = {
+  id: string;
+  marketplace: string;
+  filename?: string;
+  source_type?: string;
+  sales_metric?: string;
+  period_start?: string;
+  period_end?: string;
+  status: string;
+};
 
-export function Reports({ id, monthly=false }: { id?:string; monthly?:boolean }) {
- const {data,role,finalize,mutate}=useWorkspace(),[edit,setEdit]=useState(false),[busy,setBusy]=useState(false);
- const report=id?records(data,'reports').find(r=>r.id===id):undefined;
- if(id&&!report)return <div className="panel ops-empty"><h2>Report not found</h2><Link href="/reports">Back to reports</Link></div>;
- if(!report)return <><Heading title={monthly?'Monthly reports':'Reporting workspace'} description="Build weekly narratives from processed metrics. Finalize to preserve a stable snapshot.">{canOperate(role,'reports')&&<NewReportButton monthly={monthly}/>}</Heading><OperationsTable table="reports" hideCreate rows={records(data,'reports').filter(r=>!monthly||r.report_type==='Monthly Recap')} render={(key,r)=>key==='name'?<Link href={'/reports/'+r.id}>{r.name}</Link>:undefined} actions={r=><Link href={'/reports/'+r.id} className="ops-text-link">Open report →</Link>}/></>;
- const snapshot=records(data,'report_snapshots').find(s=>s.report_id===id),frozen=snapshot?JSON.parse(String(snapshot.snapshot_json)):null;
- const period={start:String(report.period_start),end:String(report.period_end)<String(report.cutoff_date)?String(report.period_end):String(report.cutoff_date),cutoff:String(report.cutoff_date)},filter={campaign_id:report.campaign_id?String(report.campaign_id):undefined,client_id:report.client_id?String(report.client_id):undefined};
- const m=frozen?.metrics||metrics(data,period,String(report.marketplace),filter),sources:SourceLineage[]=frozen?.sources||data.imports.filter(job=>m.sourceImportIds.includes(job.id));
- const template=templateFor(String(report.report_type),String(report.marketplace)),rules=records(data,'business_rules');
- const ruleStatus=(metricId:string)=>frozen?snapshotMetricStatus(frozen,metricId):metricConfirmationStatus(rules,{canonicalMetricId:metricId,marketplace:String(report.marketplace),clientId:report.client_id?String(report.client_id):undefined,templateId:template.id,asOf:period.end});
- const gmvMetric=report.marketplace==='Shopee'?'shopee.affiliate_gmv':report.marketplace==='TikTok'?'tiktok.affiliate_gmv':'common.affiliate_gmv';
- const quantityMetric=report.marketplace==='Shopee'?'shopee.quantity':report.marketplace==='TikTok'?'tiktok.quantity':'common.quantity';
- const editable=canOperate(role,'reports');
- const reportStatuses=['Ready','Presented','Archived'];
- const currentStatus=Math.max(0,reportStatuses.indexOf(String(report.status)));
- return <><Link href="/reports" className="back-link">← Reports</Link><Heading title={report.name} description={`${report.report_type} · ${report.marketplace} · ${formatDateID(String(report.period_start))} — ${formatDateID(String(report.period_end))}`}><span className="demo-badge">{report.status}</span>{editable&&!report.finalized_at&&<><Button variant="outline" onClick={()=>setEdit(true)}>Edit narrative & period</Button><Button disabled={busy} onClick={async()=>{setBusy(true);try{await finalize(report.id);}catch(e){toast.error(e instanceof Error?e.message:'Could not finalize');}finally{setBusy(false);}}}>{busy?'Finalizing…':'Mark Ready & freeze metrics'}</Button></>}{report.finalized_at&&<><Button variant="outline" onClick={()=>window.location.assign(`/api/reports/${report.id}/export?format=xlsx`)}>Export Excel</Button><Button variant="outline" title={`${template.name} · v${template.version}`} onClick={()=>window.location.assign(`/api/reports/${report.id}/export?format=pptx`)}>Export PowerPoint · {template.name}</Button></>}{editable&&report.finalized_at&&<select aria-label="Report status" value={report.status} onChange={e=>mutate([{table:'reports',record:{...report,status:e.target.value}}]).catch(e=>toast.error(e.message))}>{reportStatuses.slice(currentStatus).map(s=><option key={s}>{s}</option>)}</select>}</Heading>
- <div className="ops-demo-note">Data through {formatDateID(String(report.cutoff_date))}{report.finalized_at?` · Finalized ${formatDateID(String(report.finalized_at).slice(0,10))} · Future imports cannot change these metrics.`:' · Draft metrics update when new payment orders are processed.'}</div>
- <MetricCards items={[{label:'Affiliate GMV',value:money(m.gmv,true),detail:ruleStatus(gmvMetric)},{label:'Target',value:m.target===null?'Not set':money(m.target,true)},{label:'Achievement',value:m.achievement===null?'—':m.achievement.toFixed(1)+'%'},{label:'Affiliates with sales',value:m.affiliates,detail:m.affiliatesTarget==null?'Target not set':'Target '+m.affiliatesTarget},{label:'Growth',value:m.growth===null?'No baseline':m.growth.toFixed(1)+'%'},{label:'Orders / units',value:`${m.orders} / ${m.units}`,detail:ruleStatus(quantityMetric)} ]}/>
- {report.marketplace==='Multi-platform'&&<div className="ops-two-col">{['TikTok','Shopee'].map(market=>{const values=frozen?.[market]||metrics(data,period,market,filter);return <section className="panel ops-panel" key={market}><h2>{market}</h2><p>{money(values.gmv)} · {values.orders} orders · {values.affiliates} affiliates with sales</p></section>;})}</div>}
- <section className="panel ops-table-panel"><div className="ops-panel-heading"><div><h2>Data lineage</h2><p>{sources.length} source import{sources.length===1?'':'s'} used in this reporting period.</p></div><Link href="/imports">Review imports →</Link></div><div className="ops-scroll"><table className="ops-table"><thead><tr><th>Marketplace</th><th>Source</th><th>Sales metric</th><th>Covered period</th><th>Status</th></tr></thead><tbody>{sources.map(source=><tr key={source.id}><td>{source.marketplace}</td><td>{source.filename||source.source_type||'Payment Order'}</td><td>{source.sales_metric||'Processed affiliate sales'}</td><td>{source.period_start&&source.period_end?`${formatDateID(source.period_start)} — ${formatDateID(source.period_end)}`:'Demo source period'}</td><td>{source.status}</td></tr>)}</tbody></table>{!sources.length&&<div className="ops-empty">No imported rows contribute to this period.</div>}</div></section>
- <div className="ops-narratives">{[['what_went_well','What went well'],['issues','Issues'],['next_action','Next action']].map(([key,label])=><section className="panel ops-panel" key={key}><h2>{label}</h2><p className="ops-narrative">{String((frozen?.narrative||report)[key]||'No narrative added yet.')}</p></section>)}</div>{edit&&<OpForm table="reports" record={report} onClose={()=>setEdit(false)}/>}</>;
+export function Reports({ id, monthly = false }: { id?: string; monthly?: boolean }) {
+  const { data, role, finalize, mutate } = useWorkspace();
+  const [edit, setEdit] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const report = id ? records(data, 'reports').find((r) => r.id === id) : undefined;
+  if (id && !report)
+    return (
+      <div className="panel ops-empty">
+        <h2>Report not found</h2>
+        <Link href="/reports">Back to reports</Link>
+      </div>
+    );
+
+  if (!report)
+    return (
+      <>
+        <Heading
+          title={monthly ? 'Monthly reports' : 'Reporting workspace'}
+          description="Build weekly narratives from processed metrics. Finalize to preserve a stable snapshot."
+        >
+          {canOperate(role, 'reports') && <NewReportButton monthly={monthly} />}
+        </Heading>
+        <OperationsTable
+          table="reports"
+          hideCreate
+          rows={records(data, 'reports').filter((r) => !monthly || r.report_type === 'Monthly Recap')}
+          render={(key, r) => (key === 'name' ? <Link href={'/reports/' + r.id}>{r.name}</Link> : undefined)}
+          actions={(r) => (
+            <Link href={'/reports/' + r.id} className="ops-text-link">
+              Open report →
+            </Link>
+          )}
+        />
+      </>
+    );
+
+  const snapshot = records(data, 'report_snapshots').find((s) => s.report_id === id);
+  const frozen = snapshot ? JSON.parse(String(snapshot.snapshot_json)) : null;
+
+  const dataset: ReportDataset = frozen?.reportDataset || buildReportDataset({ report, data });
+
+  const period = {
+    start: String(report.period_start),
+    end: String(report.period_end) < String(report.cutoff_date) ? String(report.period_end) : String(report.cutoff_date),
+    cutoff: String(report.cutoff_date),
+  };
+  const filter = {
+    campaign_id: report.campaign_id ? String(report.campaign_id) : undefined,
+    client_id: report.client_id ? String(report.client_id) : undefined,
+  };
+
+  const m = frozen?.metrics || metrics(data, period, String(report.marketplace), filter);
+  const sources: SourceLineage[] = frozen?.sources || data.imports.filter((job) => m.sourceImportIds.includes(job.id));
+  const template = templateFor(String(report.report_type), String(report.marketplace));
+  const rules = records(data, 'business_rules');
+
+  const ruleStatus = (metricId: string) =>
+    frozen
+      ? snapshotMetricStatus(frozen, metricId)
+      : metricConfirmationStatus(rules, {
+          canonicalMetricId: metricId,
+          marketplace: String(report.marketplace),
+          clientId: report.client_id ? String(report.client_id) : undefined,
+          templateId: template.id,
+          asOf: period.end,
+        });
+
+  const gmvMetric =
+    report.marketplace === 'Shopee'
+      ? 'shopee.affiliate_gmv'
+      : report.marketplace === 'TikTok'
+        ? 'tiktok.affiliate_gmv'
+        : 'common.affiliate_gmv';
+  const quantityMetric =
+    report.marketplace === 'Shopee'
+      ? 'shopee.quantity'
+      : report.marketplace === 'TikTok'
+        ? 'tiktok.quantity'
+        : 'common.quantity';
+
+  const editable = canOperate(role, 'reports');
+  const reportStatuses = ['Ready', 'Presented', 'Archived'];
+  const currentStatus = Math.max(0, reportStatuses.indexOf(String(report.status)));
+
+  return (
+    <>
+      <Link href="/reports" className="back-link">
+        ← Reports
+      </Link>
+      <Heading
+        title={report.name}
+        description={`${report.report_type} · ${report.marketplace} · ${formatDateID(String(report.period_start))} — ${formatDateID(String(report.period_end))}`}
+      >
+        <span className="demo-badge">{report.status}</span>
+        {editable && !report.finalized_at && (
+          <>
+            <Button variant="outline" onClick={() => setEdit(true)}>
+              Edit narrative & period
+            </Button>
+            <Button
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await finalize(report.id);
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : 'Could not finalize');
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              {busy ? 'Finalizing…' : 'Mark Ready & freeze metrics'}
+            </Button>
+          </>
+        )}
+        {report.finalized_at && (
+          <>
+            <Button
+              variant="outline"
+              onClick={() => window.location.assign(`/api/reports/${report.id}/export?format=xlsx`)}
+            >
+              Export Excel
+            </Button>
+            <Button
+              variant="outline"
+              title={`${template.name} · v${template.version}`}
+              onClick={() => window.location.assign(`/api/reports/${report.id}/export?format=pptx`)}
+            >
+              Export PowerPoint · {template.name}
+            </Button>
+          </>
+        )}
+        {editable && report.finalized_at && (
+          <select
+            aria-label="Report status"
+            value={report.status}
+            onChange={(e) =>
+              mutate([{ table: 'reports', record: { ...report, status: e.target.value } }]).catch((err) =>
+                toast.error(err.message),
+              )
+            }
+          >
+            {reportStatuses.slice(currentStatus).map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        )}
+      </Heading>
+
+      <div className="ops-demo-note">
+        Data through {formatDateID(String(report.cutoff_date))}
+        {report.finalized_at
+          ? ` · Finalized ${formatDateID(String(report.finalized_at).slice(0, 10))} · Future imports cannot change these metrics.`
+          : ' · Draft metrics update when new payment orders are processed.'}
+      </div>
+
+      <MetricCards
+        items={[
+          { label: 'Affiliate GMV', value: money(m.gmv, true), detail: ruleStatus(gmvMetric) },
+          { label: 'Target', value: m.target === null ? 'Not set' : money(m.target, true) },
+          { label: 'Achievement', value: m.achievement === null ? '—' : m.achievement.toFixed(1) + '%' },
+          {
+            label: 'Affiliates with sales',
+            value: m.affiliates,
+            detail: m.affiliatesTarget == null ? 'Target not set' : 'Target ' + m.affiliatesTarget,
+          },
+          { label: 'Growth', value: m.growth === null ? 'No baseline' : m.growth.toFixed(1) + '%' },
+          { label: 'Orders / units', value: `${m.orders} / ${m.units}`, detail: ruleStatus(quantityMetric) },
+        ]}
+      />
+
+      {/* Dataset Preview & Slide Readiness Section */}
+      <section className="panel ops-panel">
+        <div className="ops-panel-heading">
+          <div>
+            <h2>Report Dataset Preview & Slide Readiness</h2>
+            <p>{dataset.businessConfirmationNote}</p>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+          <div>
+            <h3>Section Completeness</h3>
+            <div className="ops-scroll" style={{ marginTop: '0.5rem' }}>
+              <table className="ops-table">
+                <thead>
+                  <tr>
+                    <th>Section</th>
+                    <th>Completeness</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dataset.completeness.map((c) => (
+                    <tr key={c.section}>
+                      <td>{c.section}</td>
+                      <td>{c.percentage}%</td>
+                      <td>
+                        <span className="demo-badge">{c.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h3>AnyMind Template Slide Readiness</h3>
+            <div className="ops-scroll" style={{ marginTop: '0.5rem' }}>
+              <table className="ops-table">
+                <thead>
+                  <tr>
+                    <th>Slide</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dataset.slideReadiness.map((s) => (
+                    <tr key={s.slideId}>
+                      <td>Slide {s.slideNumber}</td>
+                      <td>{s.title}</td>
+                      <td>
+                        <span
+                          className="demo-badge"
+                          style={{
+                            backgroundColor:
+                              s.classification === 'SUPPORTED'
+                                ? '#E6F4EA'
+                                : s.classification === 'PARTIALLY_SUPPORTED'
+                                  ? '#FEF7E0'
+                                  : '#FCE8E6',
+                            color:
+                              s.classification === 'SUPPORTED'
+                                ? '#137333'
+                                : s.classification === 'PARTIALLY_SUPPORTED'
+                                  ? '#B06000'
+                                  : '#C5221F',
+                          }}
+                        >
+                          {s.classification}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {report.marketplace === 'Multi-platform' && (
+        <div className="ops-two-col">
+          {['TikTok', 'Shopee'].map((market) => {
+            const values = frozen?.[market] || metrics(data, period, market, filter);
+            return (
+              <section className="panel ops-panel" key={market}>
+                <h2>{market}</h2>
+                <p>
+                  {money(values.gmv)} · {values.orders} orders · {values.affiliates} affiliates with sales
+                </p>
+              </section>
+            );
+          })}
+        </div>
+      )}
+
+      <section className="panel ops-table-panel">
+        <div className="ops-panel-heading">
+          <div>
+            <h2>Data lineage</h2>
+            <p>{sources.length} source import{sources.length === 1 ? '' : 's'} used in this reporting period.</p>
+          </div>
+          <Link href="/imports">Review imports →</Link>
+        </div>
+        <div className="ops-scroll">
+          <table className="ops-table">
+            <thead>
+              <tr>
+                <th>Marketplace</th>
+                <th>Source</th>
+                <th>Sales metric</th>
+                <th>Covered period</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sources.map((source) => (
+                <tr key={source.id}>
+                  <td>{source.marketplace}</td>
+                  <td>{source.filename || source.source_type || 'Payment Order'}</td>
+                  <td>{source.sales_metric || 'Processed affiliate sales'}</td>
+                  <td>
+                    {source.period_start && source.period_end
+                      ? `${formatDateID(source.period_start)} — ${formatDateID(source.period_end)}`
+                      : 'Demo source period'}
+                  </td>
+                  <td>{source.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!sources.length && <div className="ops-empty">No imported rows contribute to this period.</div>}
+        </div>
+      </section>
+
+      <div className="ops-narratives">
+        {[
+          ['what_went_well', 'What went well'],
+          ['issues', 'Issues'],
+          ['next_action', 'Next action'],
+        ].map(([key, label]) => (
+          <section className="panel ops-panel" key={key}>
+            <h2>{label}</h2>
+            <p className="ops-narrative">
+              {String((frozen?.narrative || report)[key] || 'No narrative added yet.')}
+            </p>
+          </section>
+        ))}
+      </div>
+
+      {edit && <OpForm table="reports" record={report} onClose={() => setEdit(false)} />}
+    </>
+  );
 }

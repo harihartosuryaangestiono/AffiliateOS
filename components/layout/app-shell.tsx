@@ -3,7 +3,8 @@ import { useState, useEffect, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  MessageCircle, CalendarDays,
+  MessageCircle,
+  CalendarDays,
   LayoutDashboard,
   Building2,
   Layers,
@@ -37,6 +38,7 @@ import {
   SidebarMenuButton,
   SidebarInset,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   Command,
@@ -48,6 +50,15 @@ import {
   CommandItem,
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { canOperate } from '@/lib/operations/config';
 import { useWorkspace } from './workspace-provider';
 import { initials } from '@/lib/data/metrics';
 import { useBrowserStorage } from '@/hooks/use-browser-storage';
@@ -55,16 +66,79 @@ const groups: {
   name: string;
   items: [string, string, typeof LayoutDashboard][];
 }[] = [
- {name:'WORKSPACE',items:[['Dashboard','dashboard',LayoutDashboard],['Action Center','actions',ListChecks],['My Work','my-work',CheckSquare]]},
- {name:'PERFORMANCE',items:[['Overview','performance',ChartNoAxesCombined],['TikTok','tiktok',Music2],['Shopee','shopee',ShoppingBag]]},
- {name:'CREATORS',items:[['Creator Database','creators',Users],['Acquisition','creators/acquisition',Plus],['Outreach','creators/outreach',MessageCircle],['Performance Watch','creators/performance',ChartNoAxesCombined]]},
- {name:'ACTIVATIONS',items:[['Campaigns','campaigns',Flag],['HSL','hsl',Layers],['Peak Days','peak-days',CalendarDays],['Samples','samples',Package]]},
- {name:'DATA',items:[['Import Center','imports',Upload],['Products','products',Package]]},
- {name:'REPORTING',items:[['Weekly Reports','reports',ChartNoAxesCombined],['Monthly Reports','reports/monthly',CalendarDays]]},
- {name:'MANAGEMENT',items:[['Clients','clients',Building2],['Brands','brands',Layers],['Tasks','tasks',CheckSquare]]},
- {name:'SYSTEM',items:[['Users','users',Users],['Settings','settings',Settings]]},
+  {
+    name: 'WORKSPACE',
+    items: [
+      ['Dashboard', 'dashboard', LayoutDashboard],
+      ['Action Center', 'actions', ListChecks],
+      ['My Work', 'my-work', CheckSquare],
+    ],
+  },
+  {
+    name: 'PERFORMANCE',
+    items: [
+      ['Overview', 'performance', ChartNoAxesCombined],
+      ['TikTok', 'tiktok', Music2],
+      ['Shopee', 'shopee', ShoppingBag],
+    ],
+  },
+  {
+    name: 'CREATORS',
+    items: [
+      ['Creator Database', 'creators', Users],
+      ['Acquisition', 'creators/acquisition', Plus],
+      ['Outreach', 'creators/outreach', MessageCircle],
+      ['Performance Watch', 'creators/performance', ChartNoAxesCombined],
+    ],
+  },
+  {
+    name: 'ACTIVATIONS',
+    items: [
+      ['Campaigns', 'campaigns', Flag],
+      ['HSL', 'hsl', Layers],
+      ['Peak Days', 'peak-days', CalendarDays],
+      ['Samples', 'samples', Package],
+    ],
+  },
+  {
+    name: 'DATA',
+    items: [
+      ['Import Center', 'imports', Upload],
+      ['Products', 'products', Package],
+    ],
+  },
+  {
+    name: 'REPORTING',
+    items: [
+      ['Weekly Reports', 'reports', ChartNoAxesCombined],
+      ['Monthly Reports', 'reports/monthly', CalendarDays],
+    ],
+  },
+  {
+    name: 'MANAGEMENT',
+    items: [
+      ['Clients', 'clients', Building2],
+      ['Brands', 'brands', Layers],
+      ['Tasks', 'tasks', CheckSquare],
+    ],
+  },
+  {
+    name: 'SYSTEM',
+    items: [
+      ['Users', 'users', Users],
+      ['Settings', 'settings', Settings],
+    ],
+  },
 ];
-const quickActions=[['Creator','/creators?create=1'],['Campaign','/campaigns?create=1'],['Task','/tasks?create=1'],['Sample','/samples?create=1'],['HSL Activation','/hsl?create=1'],['Peak Day','/peak-days?create=1'],['Stock Update','/hsl/stock?create=1']];
+const quickActions = [
+  ['Creator', '/creators?create=1'],
+  ['Campaign', '/campaigns?create=1'],
+  ['Task', '/tasks?create=1'],
+  ['Sample', '/samples?create=1'],
+  ['HSL Activation', '/hsl?create=1'],
+  ['Peak Day', '/peak-days?create=1'],
+  ['Stock Update', '/hsl/stock?create=1'],
+];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
@@ -76,7 +150,21 @@ export function AppShell({ children }: { children: ReactNode }) {
     demo,
   );
   const [search, setSearch] = useState(false);
-  const [quick, setQuick] = useState(false);
+  const availableActions = quickActions.filter(([, url]) => {
+    const target = url.split('?')[0];
+    return target === '/hsl/stock'
+      ? canOperate(role, 'product_stock_snapshots')
+      : target === '/samples'
+        ? canOperate(role, 'sample_seedings')
+        : target === '/hsl'
+          ? canOperate(role, 'hsl_activations')
+          : target === '/peak-days'
+            ? canOperate(role, 'peak_days')
+            : canEdit(target.slice(1) as 'creators' | 'campaigns' | 'tasks');
+  });
+  const pendingTasks = data.entities.tasks.filter(
+    (t) => t.status !== 'Done',
+  ).length;
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -90,20 +178,29 @@ export function AppShell({ children }: { children: ReactNode }) {
   const title =
     groups
       .flatMap((g) => g.items)
-      .find((i) => path.startsWith('/' + i[1]))?.[0] || 'Workspace';
+      .sort((a, b) => b[1].length - a[1].length)
+      .find(
+        (i) => path === '/' + i[1] || path.startsWith('/' + i[1] + '/'),
+      )?.[0] || 'Workspace';
   return (
     <SidebarProvider
-      style={{ '--sidebar-width': '232px' } as React.CSSProperties}
+      style={{ '--sidebar-width': '248px' } as React.CSSProperties}
     >
+      <CloseMobileOnNavigation path={path} />
+      <a className="skip-link" href="#workspace-content">
+        Skip to content
+      </a>
       <Sidebar collapsible="icon" className="app-sidebar">
         <SidebarHeader>
           <Link href="/dashboard" className="brand">
             <span className="brand-symbol">
-              <ChartNoAxesCombined size={21} />
+              <span className="brand-mark" aria-hidden="true">
+                A
+              </span>
             </span>
             <span>
-              Affiliate<span className="font-normal">OS</span>
-              <small>OPERATIONS WORKSPACE</small>
+              Affiliate<span className="brand-os">OS</span>
+              <small>CREATE · CONNECT · GROW</small>
             </span>
           </Link>
           <Link href="/settings" className="workspace-switch">
@@ -124,12 +221,18 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <SidebarMenuItem key={url}>
                     <SidebarMenuButton
                       render={<Link href={'/' + url} />}
-                      isActive={path === '/' + url || (path.startsWith('/' + url + '/') && !groups.flatMap(g=>g.items).some(i=>i[1]!==url && path === '/'+i[1]))}
+                      isActive={
+                        path === '/' + url ||
+                        (path.startsWith('/' + url + '/') &&
+                          !groups
+                            .flatMap((g) => g.items)
+                            .some((i) => i[1] !== url && path === '/' + i[1]))
+                      }
                       tooltip={label}
                     >
                       <Icon />
                       <span>{label}</span>
-                      {url === 'tasks' && (
+                      {url === 'tasks' && pendingTasks > 0 && (
                         <span className="nav-count">
                           {
                             data.entities.tasks.filter(
@@ -146,10 +249,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </SidebarContent>
         <SidebarFooter>
-          <div className="phase-note">
-            <span className="green-dot" />
-            Daily operations<span className="text-xs">Phase 1.5</span>
-          </div>
+          <Link href="/creators/acquisition" className="sidebar-prompt">
+            <span>Built for possibility.</span>
+            <small>
+              Grow your creator network <ArrowUpRight size={13} />
+            </small>
+          </Link>
           <Link href="/settings?tab=profile" className="profile-button">
             <span className="avatar">{initials(name)}</span>
             <span>
@@ -167,35 +272,80 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span>Search creators, campaigns, brands, or anything…</span>
             <kbd>⌘ K</kbd>
           </button>
-          <div className="topbar-context flex items-center gap-3">
-            <SidebarTrigger className="text-neutral-400" />
-            <span className="breadcrumb-muted">Workspace</span>
-            <span className="text-neutral-300">/</span>
+          <div className="topbar-context">
+            <SidebarTrigger aria-label="Toggle navigation" />
             <span>{title}</span>
-            {demo && <span className="demo-badge">Demo workspace</span>}
           </div>
-          <div className="flex items-center gap-4">
-            <span className="topbar-divider" />
+          <div className="topbar-actions">
             <Link
-              href="/tasks"
-              aria-label="View tasks needing attention"
+              href="/actions"
+              aria-label="Open Action Center"
               className="notification"
             >
-              <Bell size={18} />
-              <i />
+              <Bell size={20} />
             </Link>
-            <Button
-              disabled={!canEdit('campaigns')}
-              className="quick-create"
-              onClick={() => setQuick(!quick)}
+            <time
+              className="topbar-date"
+              dateTime={new Date().toISOString().slice(0, 10)}
             >
-              <Plus size={15} />
-              Quick create
-            </Button>
-            {quick && <div className="ops-quick-menu">{quickActions.map(([label,url])=><Link key={url} href={url} onClick={()=>setQuick(false)}>+ {label}</Link>)}</div>}
+              <CalendarDays size={16} />
+              {new Intl.DateTimeFormat('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                timeZone: 'Asia/Jakarta',
+              }).format(new Date())}
+            </time>
+            {availableActions.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      className="quick-create"
+                      aria-label="Quick create"
+                    />
+                  }
+                >
+                  <Plus size={16} />
+                  <span>Quick create</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="quick-create-menu">
+                  <DropdownMenuLabel>Create something great</DropdownMenuLabel>
+                  {availableActions.map(([label, url]) => (
+                    <DropdownMenuItem key={url} render={<Link href={url} />}>
+                      <Plus size={15} />
+                      {label}
+                    </DropdownMenuItem>
+                  ))}
+                  {['Admin', 'Affiliate Manager', 'Analyst'].includes(role) && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem render={<Link href="/imports" />}>
+                        <Upload size={15} />
+                        Import data
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Link
+              href="/settings?tab=profile"
+              className="topbar-avatar"
+              aria-label={'Profile for ' + name}
+            >
+              {initials(name)}
+            </Link>
           </div>
         </header>
-        <main className="page-content">{children}</main>
+        <main
+          id="workspace-content"
+          tabIndex={-1}
+          className="page-content"
+          data-workspace-page={path.split('/')[1]}
+        >
+          {children}
+        </main>
         <footer className="workspace-footer">
           <span>
             AffiliateOS <span className="text-neutral-300">/</span> Your
@@ -217,7 +367,29 @@ export function AppShell({ children }: { children: ReactNode }) {
           <CommandInput placeholder="Search your workspace..." />
           <CommandList>
             <CommandEmpty>No matching records found.</CommandEmpty>
-            <CommandGroup heading="Actions">{[...quickActions.map(([label,url])=>["Create "+label,url]),["Open HSL","/hsl"],["Open Peak Days","/peak-days"],["Import Shopee Data","/imports/shopee"],["Import TikTok Data","/imports/tiktok"]].map(([label,url])=><CommandItem key={url} value={label} onSelect={()=>{setSearch(false);router.push(url);}}>{label}</CommandItem>)}</CommandGroup>
+            <CommandGroup heading="Actions">
+              {[
+                ...availableActions.map(([label, url]) => [
+                  'Create ' + label,
+                  url,
+                ]),
+                ['Open HSL', '/hsl'],
+                ['Open Peak Days', '/peak-days'],
+                ['Import Shopee Data', '/imports/shopee'],
+                ['Import TikTok Data', '/imports/tiktok'],
+              ].map(([label, url]) => (
+                <CommandItem
+                  key={url}
+                  value={label}
+                  onSelect={() => {
+                    setSearch(false);
+                    router.push(url);
+                  }}
+                >
+                  {label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
             {Object.entries(data.entities)
               .filter(([k]) => k !== 'tasks')
               .map(([entity, rows]) => (
@@ -247,4 +419,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       </CommandDialog>
     </SidebarProvider>
   );
+}
+
+function CloseMobileOnNavigation({ path }: { path: string }) {
+  const { setOpenMobile } = useSidebar();
+  useEffect(() => {
+    setOpenMobile(false);
+  }, [path, setOpenMobile]);
+  return null;
 }

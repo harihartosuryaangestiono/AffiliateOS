@@ -6,11 +6,13 @@ import {
   snapshotWithTemplate,
   type FrozenReportSnapshot,
 } from './snapshot.ts';
+import type { ReportDataset } from './datamart.ts';
 
 const blue = 'FF1167B1',
   pale = 'FFEAF3FB',
   navy = 'FF12233F',
   green = 'FF15A66A';
+
 export async function buildExcelReport(input: {
   reportName: string;
   snapshot: FrozenReportSnapshot;
@@ -18,9 +20,12 @@ export async function buildExcelReport(input: {
   finalizedAt: string;
 }) {
   const snapshot = snapshotWithTemplate(input.snapshot, input.template);
+  const ds = snapshot.reportDataset as unknown as ReportDataset | undefined;
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'AffiliateOS';
   workbook.created = new Date(input.finalizedAt);
+
+  // Sheet 1: Performance
   const sheet = workbook.addWorksheet('Weekly Performance', {
     views: [{ state: 'frozen', ySplit: 5 }],
   });
@@ -47,10 +52,12 @@ export async function buildExcelReport(input: {
   };
   sheet.getCell('A1').alignment = { vertical: 'middle' };
   sheet.getRow(1).height = 34;
+
   sheet.mergeCells('A2:D2');
   sheet.getCell('A2').value =
     `${snapshot.marketplace} · ${snapshot.period.start} — ${snapshot.period.end}`;
   sheet.getCell('A2').font = { color: { argb: blue }, bold: true };
+
   sheet.getRow(4).values = [
     'Metric',
     'Finalized value',
@@ -61,6 +68,7 @@ export async function buildExcelReport(input: {
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: blue } };
   });
+
   const currency = new Set([
     'affiliateGmv',
     'commission',
@@ -74,9 +82,10 @@ export async function buildExcelReport(input: {
     'targetAchievement',
     'growth',
   ]);
+
   input.template.metricOrder.forEach((key, index) => {
-    const row = sheet.getRow(index + 5),
-      value = snapshotMetric(snapshot, key);
+    const row = sheet.getRow(index + 5);
+    const value = snapshotMetric(snapshot, key);
     row.values = [
       metricLabels[key] || key,
       value,
@@ -98,6 +107,7 @@ export async function buildExcelReport(input: {
       fgColor: { argb: index % 2 ? 'FFFFFFFF' : pale },
     };
   });
+
   const narrativeStart = input.template.metricOrder.length + 7;
   sheet.mergeCells(`A${narrativeStart}:D${narrativeStart}`);
   sheet.getCell(`A${narrativeStart}`).value = 'Narratives';
@@ -110,6 +120,7 @@ export async function buildExcelReport(input: {
     pattern: 'solid',
     fgColor: { argb: green },
   };
+
   [
     ['what_went_well', 'What Went Well'],
     ['issues', 'Issues / Risks'],
@@ -123,6 +134,42 @@ export async function buildExcelReport(input: {
     row.getCell(2).alignment = { wrapText: true, vertical: 'top' };
     row.height = 34;
   });
+
+  // Optional Data Mart Sheets if dataset is present
+  if (ds) {
+    // Time Series Sheet
+    if (ds.timeSeries?.length) {
+      const tsSheet = workbook.addWorksheet('Time Series');
+      tsSheet.addRow(['Date', 'Marketplace', 'GMV', 'Orders', 'Units', 'Commission', 'ROI', 'Cost Ratio', 'Affiliates']);
+      tsSheet.getRow(1).font = { bold: true };
+      for (const p of ds.timeSeries) {
+        tsSheet.addRow([p.date, p.marketplace, p.affiliateGmv, p.orders, p.quantity, p.commission, p.roi, p.costRatio, p.affiliatesWithSales]);
+      }
+    }
+
+    // Brand Performance Sheet
+    if (ds.brandPerformance?.rows?.length) {
+      const bSheet = workbook.addWorksheet('Brand Performance');
+      bSheet.addRow(['Brand Name', 'GMV', 'Orders', 'Quantity', 'Commission', 'Affiliates', 'Contribution %', 'Status']);
+      bSheet.getRow(1).font = { bold: true };
+      for (const b of ds.brandPerformance.rows) {
+        bSheet.addRow([b.brand_name, b.gmv, b.orders, b.quantity, b.commission, b.affiliates, b.contribution, b.mapping_status]);
+      }
+    }
+
+    // Peak Day Comparison Sheet
+    if (ds.peakDayComparison?.currentPeakDay) {
+      const pSheet = workbook.addWorksheet('Peak Day Comparison');
+      pSheet.addRow(['Peak Day Name', 'Event Date', 'NMV', 'Orders', 'Quantity', 'Commission', 'ROI', 'Cost Ratio', 'Affiliates']);
+      pSheet.getRow(1).font = { bold: true };
+      const c1 = ds.peakDayComparison.comparisonPeakDay;
+      const c2 = ds.peakDayComparison.currentPeakDay;
+      if (c1) pSheet.addRow([c1.name, c1.date, c1.gmv, c1.orders, c1.quantity, c1.commission, c1.roi, c1.costRatio, c1.affiliates]);
+      pSheet.addRow([c2.name, c2.date, c2.gmv, c2.orders, c2.quantity, c2.commission, c2.roi, c2.costRatio, c2.affiliates]);
+    }
+  }
+
+  // Source Lineage Sheet
   const lineage = workbook.addWorksheet('Source Lineage');
   lineage.columns = [
     { width: 16 },
@@ -153,6 +200,8 @@ export async function buildExcelReport(input: {
       source.period_end,
       source.status,
     ]);
+
+  // Report Metadata Sheet
   const metadata = workbook.addWorksheet('Report Metadata');
   metadata.state = 'hidden';
   [
@@ -167,6 +216,7 @@ export async function buildExcelReport(input: {
     ['Finalized at', input.finalizedAt],
     ['Finalized by', snapshot.finalized_by],
   ].forEach((values) => metadata.addRow(values));
+
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 

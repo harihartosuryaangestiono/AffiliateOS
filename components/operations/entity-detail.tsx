@@ -1,7 +1,12 @@
 'use client';
 import { ProductPerformance } from '@/components/workflows/workspace';
 import { useSearchParams } from 'next/navigation';
-import { ActivationTable, CreatorQuickActions, Outreach, PerformanceWatch } from '@/components/workflows/creators';
+import {
+  ActivationTable,
+  CreatorQuickActions,
+  Outreach,
+  PerformanceWatch,
+} from '@/components/workflows/creators';
 import { HSL, Samples } from '@/components/workflows/activations';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -68,7 +73,9 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
               'TikTok',
               'Shopee',
               'Campaigns',
-              'HSL', 'Samples', 'Outreach',
+              'HSL',
+              'Samples',
+              'Outreach',
               'Content',
               'Performance',
               'Notes',
@@ -218,29 +225,31 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
         <ArrowLeft size={14} />
         Back to {entity}
       </Link>
-      <div className="page-heading">
-        <div className="detail-heading">
-          <span className="avatar color-0">{initials(record.name)}</span>
-          <div>
-            <h1>{record.name}</h1>
-            <div className="flex gap-3 items-center mt-2">
-              <Status value={record.status} />
-              <span className="text-xs text-muted-foreground">
-                {record.category ||
-                  record.marketplace ||
-                  config[entity].singular}
-              </span>
+      <section className="entity-profile">
+        <div className="page-heading">
+          <div className="detail-heading">
+            <span className="avatar color-0">{initials(record.name)}</span>
+            <div>
+              <h1>{record.name}</h1>
+              <div className="flex gap-3 items-center mt-2">
+                <Status value={record.status} />
+                <span className="text-xs text-muted-foreground">
+                  {record.category ||
+                    record.marketplace ||
+                    config[entity].singular}
+                </span>
+              </div>
             </div>
           </div>
+          {canEdit(entity) && (
+            <Button variant="outline" onClick={() => setEdit(true)}>
+              <Pencil size={14} />
+              Edit {config[entity].singular.toLowerCase()}
+            </Button>
+          )}
         </div>
-        {canEdit(entity) && (
-          <Button variant="outline" onClick={() => setEdit(true)}>
-            <Pencil size={14} />
-            Edit {config[entity].singular.toLowerCase()}
-          </Button>
-        )}
-      </div>
-      {entity === 'creators' && <CreatorQuickActions id={id} />}
+        {entity === 'creators' && <CreatorQuickActions id={id} />}
+      </section>
       <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
         <TabsList variant="line" className="tabs-nav w-full justify-start">
           {tabs.map((t) => (
@@ -249,13 +258,29 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
             </TabsTrigger>
           ))}
         </TabsList>
-        {tab === 'Creator Activation' && <TabsContent value={tab}><ActivationTable campaignId={id}/></TabsContent>}
-        {entity === 'creators' && tab === 'HSL' && <TabsContent value={tab}><HSL creatorId={id}/></TabsContent>}
-        {entity === 'creators' && tab === 'Samples' && <TabsContent value={tab}><Samples creatorId={id}/></TabsContent>}
-        {entity === 'creators' && tab === 'Outreach' && <TabsContent value={tab}><Outreach creatorId={id}/></TabsContent>}
+        {tab === 'Creator Activation' && (
+          <TabsContent value={tab}>
+            <ActivationTable campaignId={id} />
+          </TabsContent>
+        )}
+        {entity === 'creators' && tab === 'HSL' && (
+          <TabsContent value={tab}>
+            <HSL creatorId={id} />
+          </TabsContent>
+        )}
+        {entity === 'creators' && tab === 'Samples' && (
+          <TabsContent value={tab}>
+            <Samples creatorId={id} />
+          </TabsContent>
+        )}
+        {entity === 'creators' && tab === 'Outreach' && (
+          <TabsContent value={tab}>
+            <Outreach creatorId={id} />
+          </TabsContent>
+        )}
 
         <TabsContent value="Overview">
-          {entity === "products" && <ProductPerformance id={id}/>}
+          {entity === 'products' && <ProductPerformance id={id} />}
           <div className="detail-grid mb-5">
             <section className="panel detail-panel">
               <h2>{config[entity].singular} information</h2>
@@ -267,7 +292,9 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
                       <dt>{f.label}</dt>
                       <dd>
                         {f.key.includes('gmv')
-                          ? record[f.key] === null || record[f.key] === undefined || record[f.key] === ''
+                          ? record[f.key] === null ||
+                            record[f.key] === undefined ||
+                            record[f.key] === ''
                             ? 'Not set'
                             : money(Number(record[f.key]))
                           : displayValue(f.key, record, entity, data) || '—'}
@@ -305,7 +332,13 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
           {['clients', 'campaigns', 'creators', 'brands'].includes(entity) &&
             performance}
         </TabsContent>
-        <TabsContent value="Performance">{entity === "creators" ? <PerformanceWatch creatorId={id}/> : performance}</TabsContent>
+        <TabsContent value="Performance">
+          {entity === 'creators' ? (
+            <PerformanceWatch creatorId={id} />
+          ) : (
+            performance
+          )}
+        </TabsContent>
         <TabsContent value="Brands">
           <EntityTable
             entity="brands"

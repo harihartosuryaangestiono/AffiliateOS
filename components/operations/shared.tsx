@@ -51,11 +51,30 @@ export function Status({ value }: { value: string }) {
     <span
       className={
         'status-badge ' +
-        (['Active', 'Completed', 'Done'].includes(value)
+        ([
+          'Active',
+          'Completed',
+          'Done',
+          'Healthy',
+          'Ready',
+          'Growing',
+          'Converted',
+          'Generated Sales',
+          'Locked',
+          'Approved',
+        ].includes(value)
           ? 'success'
-          : ['Warning', 'Watchlist', 'High', 'Urgent'].includes(value)
+          : [
+                'Warning',
+                'Watchlist',
+                'High',
+                'Low',
+                'Declining',
+                'Follow Up',
+                'Activation Pending',
+              ].includes(value)
             ? 'warning'
-            : ['Failed'].includes(value)
+            : ['Failed', 'Critical', 'OOS', 'Urgent', 'Overdue'].includes(value)
               ? 'danger'
               : 'neutral')
       }

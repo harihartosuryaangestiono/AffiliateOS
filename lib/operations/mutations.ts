@@ -4,6 +4,7 @@ import { acquisitionStages, operationConfig, records, canOperate } from './confi
 import { metrics, todayISO } from './engine.ts';
 import { templateFor } from '../reporting/templates.ts';
 import { snapshotBusinessRules } from '../reporting/business-rules.ts';
+import { buildReportDataset } from '../reporting/datamart.ts';
 export type Change={table:string;record:RecordData;remove?:boolean};
 export function parseOperation(table:string,input:RecordData){
  const cfg=operationConfig[table];if(!cfg)throw Error('Unknown operation.');
@@ -61,6 +62,7 @@ export function applyChanges(data:WorkspaceData,changes:Change[],role:Role,actor
  }
  return {data:next,changes:prepared};
 }
+
 export function freezeReport(data:WorkspaceData,id:string,actor:string,now=new Date().toISOString()){
  const report=records(data,'reports').find(r=>r.id===id);if(!report)throw Error('Report not found.');if(report.finalized_at)throw Error('Report is already finalized.');
  const end=String(report.period_end)<String(report.cutoff_date)?String(report.period_end):String(report.cutoff_date),period={start:String(report.period_start),end,cutoff:String(report.cutoff_date)};
@@ -69,7 +71,8 @@ export function freezeReport(data:WorkspaceData,id:string,actor:string,now=new D
  const reportMetrics=metrics(data,period,String(report.marketplace),filter),sources=data.imports.filter(job=>reportMetrics.sourceImportIds.includes(job.id)).map(job=>({id:job.id,marketplace:job.marketplace,filename:job.filename,source_type:job.source_type,sales_metric:job.sales_metric,period_start:job.period_start,period_end:job.period_end,status:job.status}));
  const template=templateFor(String(report.report_type),String(report.marketplace));
  const businessRules=snapshotBusinessRules(data,{marketplace:String(report.marketplace),clientId:report.client_id?String(report.client_id):undefined,templateId:template.id,asOf:end});
- const snapshot={id:crypto.randomUUID(),name:report.name,status:'Final',created_at:now,report_id:report.id,snapshot_json:JSON.stringify({period,marketplace:report.marketplace,metrics:reportMetrics,TikTok:metrics(data,period,'TikTok',filter),Shopee:metrics(data,period,'Shopee',filter),sources,narrative:{what_went_well:report.what_went_well,issues:report.issues,next_action:report.next_action},finalized_by:actor,template:{id:template.id,version:template.version,name:template.name},business_rules:businessRules})};
+ const reportDataset=buildReportDataset({report,data,actorName:actor});
+ const snapshot={id:crypto.randomUUID(),name:report.name,status:'Final',created_at:now,report_id:report.id,snapshot_json:JSON.stringify({period,marketplace:report.marketplace,metrics:reportMetrics,TikTok:metrics(data,period,'TikTok',filter),Shopee:metrics(data,period,'Shopee',filter),sources,narrative:{what_went_well:report.what_went_well,issues:report.issues,next_action:report.next_action},finalized_by:actor,template:{id:template.id,version:template.version,name:template.name},business_rules:businessRules,reportDataset})};
  const finalized={...report,status:'Ready',finalized_at:now};
  return {data:putRecord(putRecord(data,'report_snapshots',snapshot),'reports',finalized),changes:[{table:'report_snapshots',record:snapshot},{table:'reports',record:finalized}]};
 }

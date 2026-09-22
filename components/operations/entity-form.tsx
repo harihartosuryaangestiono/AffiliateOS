@@ -80,6 +80,9 @@ export function EntityForm({
           </SheetTitle>
           <SheetDescription>{cfg.description}</SheetDescription>
         </SheetHeader>
+        <p className="form-guide">
+          Fields marked * are required. Changes apply when you save.
+        </p>
         <form onSubmit={submit} className="entity-form">
           <div className="form-grid">
             {cfg.fields.map((f) => (
@@ -138,7 +141,9 @@ export function EntityForm({
                         ...values,
                         [f.key]:
                           f.type === 'number'
-                            ? (e.target.value === '' ? null : Number(e.target.value))
+                            ? e.target.value === ''
+                              ? null
+                              : Number(e.target.value)
                             : e.target.value,
                       })
                     }

@@ -7,17 +7,25 @@ import Link from 'next/link';
 import { Upload, ArrowUpRight } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useWorkspace } from '@/components/layout/workspace-provider';
-import { TrendChart, PlatformIcon } from '@/components/dashboard/dashboard';
+import { PlatformIcon } from '@/components/dashboard/dashboard';
 import { sum, money, number, initials } from '@/lib/data/metrics';
 import { EntityTable } from './entity-table';
 import { EmptyState } from './shared';
+import { GrowthChart } from '@/components/dashboard/growth-chart';
 export function MarketplacePage({ market }: { market: 'TikTok' | 'Shopee' }) {
   const { data } = useWorkspace();
   const [tab, setTab] = useState('Overview');
-  const {mode,setMode,custom,setCustom}=usePeriod();
-  const period=periodRange(mode,new Date(),thresholds(data).cutoff_days,custom);
+  const { mode, setMode, custom, setCustom } = usePeriod();
+  const period = periodRange(
+    mode,
+    new Date(),
+    thresholds(data).cutoff_days,
+    custom,
+  );
   const tt = market === 'TikTok';
-  const rows = (tt ? data.tiktok_performance : data.shopee_performance).filter(r=>r.date>=period.start&&r.date<=period.end);
+  const rows = (tt ? data.tiktok_performance : data.shopee_performance).filter(
+    (r) => r.date >= period.start && r.date <= period.end,
+  );
   const accounts = tt ? data.tiktok_accounts : data.shopee_accounts;
   const ranks = accounts
     .map((a) => ({
@@ -38,15 +46,9 @@ export function MarketplacePage({ market }: { market: 'TikTok' | 'Shopee' }) {
     'Imports',
   ];
   const chart = (
-    <section className="panel mb-5">
-      <div className="panel-heading">
-        <div>
-          <h2>{market} GMV trend</h2>
-          <p>Daily performance · {period.start} — {period.end}</p>
-        </div>
-      </div>
-      <TrendChart market={market} period={period} days={366} />
-    </section>
+    <div className="mb-5">
+      <GrowthChart market={market} period={period} />
+    </div>
   );
   return (
     <>
@@ -70,7 +72,13 @@ export function MarketplacePage({ market }: { market: 'TikTok' | 'Shopee' }) {
           Import {market} data
         </Link>
       </div>
-      <PeriodControl mode={mode} onMode={setMode} custom={custom} onCustom={setCustom} period={period}/>
+      <PeriodControl
+        mode={mode}
+        onMode={setMode}
+        custom={custom}
+        onCustom={setCustom}
+        period={period}
+      />
       <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
         <TabsList variant="line" className="tabs-nav w-full justify-start">
           {tabs.map((t) => (
@@ -91,10 +99,11 @@ export function MarketplacePage({ market }: { market: 'TikTok' | 'Shopee' }) {
               {
                 label: tt ? 'Content published' : 'Products sold',
                 value: tt
-                  ? data.tiktok_performance.filter(r=>r.date>=period.start&&r.date<=period.end).reduce(
-                      (s, p) => s + p.video_count,
-                      0,
-                    )
+                  ? data.tiktok_performance
+                      .filter(
+                        (r) => r.date >= period.start && r.date <= period.end,
+                      )
+                      .reduce((s, p) => s + p.video_count, 0)
                   : number(sum(rows, 'units_sold')),
               },
             ].map((k) => (

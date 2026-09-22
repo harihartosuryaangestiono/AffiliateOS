@@ -51,6 +51,7 @@ import { EntityForm } from './entity-form';
 import { Choice, Status, EmptyState } from './shared';
 import type { Entity, RecordData, WorkspaceData } from '@/types/domain';
 import { toast } from 'sonner';
+import { todayISO } from '@/lib/operations/engine';
 export function displayValue(
   key: string,
   r: RecordData,
@@ -133,6 +134,7 @@ export function EntityTable({
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState(params.get('status') || 'all');
   const [market, setMarket] = useState('all');
+  const [category, setCategory] = useState('all');
   const [sort, setSort] = useState({ key: 'name', dir: 1 });
   const [page, setPage] = useState(0);
   const [visible, setVisible] = useState(cfg.columns);
@@ -148,9 +150,13 @@ export function EntityTable({
           String(v).toLowerCase().includes(search.toLowerCase()),
         ) &&
         (status === 'all' || r.status === status) &&
+        (category === 'all' || r.category === category) &&
         (market === 'all' ||
-          r.marketplace === market ||
-          r.marketplace === 'Multi-platform'),
+          (entity === 'creators'
+            ? data[
+                market === 'TikTok' ? 'tiktok_accounts' : 'shopee_accounts'
+              ].some((a) => a.creator_id === r.id)
+            : r.marketplace === market || r.marketplace === 'Multi-platform')),
     )
     .sort((a, b) => {
       const x = displayValue(sort.key, a, entity, data),
@@ -187,6 +193,87 @@ export function EntityTable({
           )}
         </div>
       )}
+      {!embedded && (
+        <div className="entity-summary">
+          <div>
+            <small>
+              {entity === 'tasks'
+                ? 'Open tasks'
+                : 'Active ' + cfg.title.toLowerCase()}
+            </small>
+            <strong>
+              {
+                all.filter((r) =>
+                  entity === 'tasks'
+                    ? r.status !== 'Done'
+                    : r.status === 'Active',
+                ).length
+              }
+            </strong>
+          </div>
+          {entity === 'creators' ? (
+            <>
+              <div>
+                <small>TikTok accounts</small>
+                <strong>{data.tiktok_accounts.length}</strong>
+              </div>
+              <div>
+                <small>Shopee accounts</small>
+                <strong>{data.shopee_accounts.length}</strong>
+              </div>
+              <Link href="/creators/acquisition">
+                Explore acquisition <ArrowUpRight size={14} />
+              </Link>
+            </>
+          ) : entity === 'campaigns' ? (
+            <>
+              <div>
+                <small>TikTok campaigns</small>
+                <strong>
+                  {all.filter((r) => r.marketplace === 'TikTok').length}
+                </strong>
+              </div>
+              <div>
+                <small>Shopee campaigns</small>
+                <strong>
+                  {all.filter((r) => r.marketplace === 'Shopee').length}
+                </strong>
+              </div>
+              <Link href="/campaigns/planning">
+                Plan next month <ArrowUpRight size={14} />
+              </Link>
+            </>
+          ) : entity === 'tasks' ? (
+            <>
+              <div>
+                <small>Overdue</small>
+                <strong>
+                  {
+                    all.filter(
+                      (r) =>
+                        r.status !== 'Done' &&
+                        r.due_date &&
+                        String(r.due_date) < todayISO(),
+                    ).length
+                  }
+                </strong>
+              </div>
+              <div>
+                <small>Completed</small>
+                <strong>{all.filter((r) => r.status === 'Done').length}</strong>
+              </div>
+              <Link href="/my-work">
+                Open my work <ArrowUpRight size={14} />
+              </Link>
+            </>
+          ) : (
+            <div>
+              <small>Total {cfg.title.toLowerCase()}</small>
+              <strong>{all.length}</strong>
+            </div>
+          )}
+        </div>
+      )}
       <section className="panel data-panel">
         <div className="table-toolbar">
           <div className="table-search">
@@ -218,7 +305,7 @@ export function EntityTable({
               ]}
             />
           </div>
-          {entity === 'campaigns' && (
+          {['campaigns', 'creators'].includes(entity) && (
             <div className="filter-select">
               <Choice
                 label="Marketplace"
@@ -227,12 +314,35 @@ export function EntityTable({
                   setMarket(v);
                   reset();
                 }}
-                options={['all', 'TikTok', 'Shopee', 'Multi-platform'].map(
-                  (v) => ({
-                    value: v,
-                    label: v === 'all' ? 'All marketplaces' : v,
-                  }),
-                )}
+                options={(entity === 'creators'
+                  ? ['all', 'TikTok', 'Shopee']
+                  : ['all', 'TikTok', 'Shopee', 'Multi-platform']
+                ).map((v) => ({
+                  value: v,
+                  label: v === 'all' ? 'All marketplaces' : v,
+                }))}
+              />
+            </div>
+          )}
+          {entity === 'creators' && all.some((r) => r.category) && (
+            <div className="filter-select">
+              <Choice
+                label="Creator category"
+                value={category}
+                onChange={(v) => {
+                  setCategory(v);
+                  reset();
+                }}
+                options={[
+                  { value: 'all', label: 'All categories' },
+                  ...[
+                    ...new Set(
+                      all.map((r) => String(r.category || '')).filter(Boolean),
+                    ),
+                  ]
+                    .sort()
+                    .map((value) => ({ value, label: value })),
+                ]}
               />
             </div>
           )}
@@ -337,7 +447,7 @@ export function EntityTable({
                               <span
                                 className={
                                   k === 'due_date' &&
-                                  String(value) < '2026-09-08' &&
+                                  String(value) < todayISO() &&
                                   r.status !== 'Done'
                                     ? 'overdue'
                                     : ''
@@ -427,16 +537,31 @@ export function EntityTable({
           </>
         ) : (
           <EmptyState
-            title={'No ' + cfg.title.toLowerCase() + ' found'}
-            description="Try changing your filters, or add your first record."
+            title={
+              all.length
+                ? 'No matching ' + cfg.title.toLowerCase()
+                : 'No ' + cfg.title.toLowerCase() + ' yet'
+            }
+            description={
+              all.length
+                ? 'Try a broader search or clear your filters to see more results.'
+                : cfg.description +
+                  ' Add your first ' +
+                  cfg.singular.toLowerCase() +
+                  ' to get started.'
+            }
           >
-            {search || status !== 'all' ? (
+            {search ||
+            status !== 'all' ||
+            market !== 'all' ||
+            category !== 'all' ? (
               <Button
                 variant="outline"
                 onClick={() => {
                   setSearch('');
                   setStatus('all');
                   setMarket('all');
+                  setCategory('all');
                 }}
               >
                 Clear filters

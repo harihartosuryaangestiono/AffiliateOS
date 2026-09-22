@@ -8,6 +8,7 @@ export type FrozenReportSnapshot = {
   narrative?: Record<string, string | null | undefined>;
   finalized_by?: string;
   template?: { id: string; version: string; name: string };
+  reportDataset?: Record<string, unknown>;
   business_rules?: Array<{
     id: string;
     ruleKey: string;

@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-  ChartNoAxesCombined,
   ArrowRight,
   LoaderCircle,
   LockKeyhole,
@@ -35,7 +34,7 @@ export function LoginForm({ configured }: { configured: boolean }) {
     <main className="login-screen">
       <div className="login-brand">
         <span className="brand-symbol">
-          <ChartNoAxesCombined size={22} />
+          <span className="brand-mark" aria-hidden="true">A</span>
         </span>
         AffiliateOS
       </div>

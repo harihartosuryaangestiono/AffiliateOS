@@ -31,6 +31,8 @@ export const operationConfig:Record<string,OpConfig> = {
   operational_alerts:{title:'Alert history',singular:'Alert',fields:[f('alert_type','Type'),f('entity_type','Entity'),f('entity_id','Record ID'),f('message','Message'),choice('severity','Severity',['Info','Warning','Critical']),date('resolved_at','Resolved date')],columns:['alert_type','severity','message','resolved_at']},
   business_rules:{title:'Business rules',singular:'Business rule',immutable:true,fields:[],columns:['rule_key','name','marketplace','scope_type','version','status']},
   operational_actions:{title:'Action Center',singular:'Action',immutable:true,fields:[],columns:['priority','title','category','due_at','status']},
+  brand_mappings:{title:'Brand mappings',singular:'Brand mapping',fields:[rel('product_id','Product','products'),rel('brand_id','Brand','brands'),choice('status','Status',['mapped','unmapped','ambiguous'])],columns:['product_id','brand_id','status']},
+  report_datasets:{title:'Report datasets',singular:'Report dataset',immutable:true,fields:[rel('report_id','Report','reports'),f('dataset_schema_version','Schema version')],columns:['report_id','dataset_schema_version','created_at']},
 };
 operationConfig.tasks={...entityConfig.tasks,fields:entityConfig.tasks.fields};
 export const operationTables = Object.keys(operationConfig).filter(t=>t!=='tasks');

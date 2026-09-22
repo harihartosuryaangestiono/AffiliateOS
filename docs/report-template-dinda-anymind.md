@@ -6,7 +6,7 @@ The user-supplied `No 4 (Slide 16-21 & 31) .pptx` is stored privately at `report
 
 - Template ID: `anymind-haleon-weekly-v1`
 - Version: `1.0.0`
-- Slide mapping: `1.0.0`
+- Slide mapping: `1.9.0`
 - SHA-256: `e194192eff217d9695561f7ad79683ed22d9f1b0cbfdbce88c0fea1ac02a1a1d`
 - Source dimensions: 16:9 widescreen
 - Source deck: 36 slides
@@ -15,28 +15,24 @@ The user-supplied `No 4 (Slide 16-21 & 31) .pptx` is stored privately at `report
 
 Slides 1–15 contain the cover, agenda, sell-in/B2C performance, marketplace and brand performance, marketing contribution, livestream, and 9.9 sections. Slides 16–21 contain monthly Shopee affiliate reporting. Slides 22–27 contain B2B and activation sections. Slides 28–31 contain agenda and future initiatives. Slides 32–36 contain closing, appendix, brand sell-in, September initiatives, and an alternate performance slide.
 
-## Relevant slide map
+## Phase 1.9 Slide Map & Readiness
 
-| Source slide | Purpose | Preserved elements | Dynamic use / overflow |
+| Source slide | Purpose | Preserved elements | Phase 1.9 Integration Status |
 | --- | --- | --- | --- |
-| 16 | Affiliate KPI summary | AnyMind logo, color rail, typography, KPI tables, highlight band, page marker | Registered for a future time-series snapshot. Excluded because its primary chart is a raster image and the current snapshot cannot repopulate it safely. |
-| 17 | Funnel split | Branding, funnel layout, highlight band | Registered for future funnel data. Excluded because the current snapshot has no authoritative Open/Targeted/Live/Video split. |
-| 18 | Brand performance | Branding and brand comparison layout | Registered for future brand-attributed snapshot metrics. Excluded rather than displaying stale source data. |
-| 19 | Rank-up program | Branding and tier table | Registered for future rank-program data. Excluded because the snapshot does not store tier membership. |
-| 20 | Peak Day comparison | Branding and comparison layout | Registered for a future campaign snapshot. Excluded because the QA snapshot has no comparable Peak Day pair. |
-| 21 | Snapshot and operational narrative | AnyMind logo, color rail, headline hierarchy, confidentiality footer | Used. Old report images are removed; period KPIs and finalized manual narratives populate existing text structures. |
-| 31 | Q4 activation plan | Branding, planning table and highlight structure | Registered for monthly planning exports. Excluded from weekly export because snapshot data does not contain the plan/budget fields. |
+| 16 | Affiliate KPI summary | AnyMind logo, color rail, typography, KPI tables, highlight band, page marker | `SUPPORTED` — Populated from frozen time-series data & KPI summary. Non-logo raster image removed and updated with period metrics. |
+| 17 | Funnel split | Branding, funnel layout, highlight band | `PARTIALLY_SUPPORTED` — Channel split (Live / Video / Share Link) populated. Open/Targeted tier split marked `BUSINESS_CONFIRMATION_REQUIRED`. |
+| 18 | Brand performance | Branding and brand comparison layout | `SUPPORTED` — Populated using product-to-brand master mappings (`brand_mappings`). |
+| 19 | Rank-up program | Branding and tier table | `SOURCE_UNAVAILABLE` — Excluded from dynamic deck assembly because AffiliateOS does not store tier target baselines. Data contract exists without fabricated rank data. |
+| 20 | Peak Day comparison | Branding and comparison layout | `SUPPORTED` — Populated from Peak Day campaign performance (e.g., 9.9 vs 8.8 double dates / paydays). |
+| 21 | Snapshot and operational narrative | AnyMind logo, color rail, headline hierarchy, confidentiality footer | `SUPPORTED` — Populated with period KPIs and finalized manual narratives (`what_went_well`, `issues`, `next_action`). |
+| 31 | Q4 activation plan | Branding, planning table and highlight structure | `PARTIALLY_SUPPORTED` — Included for monthly profiles when monthly planning records exist. |
 
-## Snapshot mapping
+## Snapshot & Data Mart Mapping
 
-The export uses `report_snapshots.snapshot_json` exclusively. Slide 21 maps `affiliateGmv`, `commission`, `roi`, `costRatio`, `affiliatesWithSales`, `orders`, `quantity`, period, marketplace, and the manual `what_went_well`, `issues`, and `next_action` fields. Source lineage stays in the immutable report snapshot and Excel export.
+The export uses `report_snapshots.snapshot_json` and its embedded `reportDataset` exclusively. Every exported value comes from the frozen dataset.
 
-The source charts on slides 16–20 are raster images rather than editable PowerPoint charts. AffiliateOS removes the stale image on an included slide instead of presenting historical source data as current. It does not replace that image with a generic chart. Future chart support requires a snapshot time series and a reviewed template version.
+Source raster charts on slides 16–20 are removed from included slides so that stale source template images are never displayed.
 
 ## Branding preservation
 
-The export retains the selected original slide, required masters/layouts/theme, embedded AnyMind logo, font runs, colored header rail, table styling, slide dimensions, page markers, and confidentiality footer. It changes text in the copied slide and removes report-specific raster images. Unused source slides, speaker notes, comments, charts, embedded workbooks, and unreferenced source media are pruned from the generated package so hidden template content is not shipped. It does not redraw or download logos.
-
-## Visual QA
-
-The controlled QA export contains one slide. It was rendered at full size and inspected. The AnyMind logo, header hierarchy, table structure, line spacing, margins, and confidentiality footer remain present. Package validation reports zero missing relationships, zero geometry findings, no notes, and one slide; snapshot values, narratives, and removal of unused source parts are also asserted through OOXML tests.
+The export retains the selected original slides, required masters/layouts/theme, embedded AnyMind logo, font runs, colored header rail, table styling, slide dimensions, page markers, and confidentiality footer. Unused source slides, speaker notes, comments, charts, embedded workbooks, and unreferenced source media are pruned from the generated package so hidden template content is not shipped.

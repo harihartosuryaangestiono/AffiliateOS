@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { Toaster } from 'sonner';
 import './globals.css';
-import './visual-system.css';
 import './operations.css';
+import './visual-system.css';
 export const metadata: Metadata = {
   title: 'AffiliateOS — Affiliate Operations',
   description:
