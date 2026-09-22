@@ -6,6 +6,7 @@ import {
   snapshotWithTemplate,
   type FrozenReportSnapshot,
 } from './snapshot.ts';
+import { buildAnyMindPowerPoint } from './template-powerpoint.ts';
 
 const C = {
   navy: '0D1B35',
@@ -24,6 +25,7 @@ export async function buildPowerPointReport(input: {
   template: ReportTemplate;
   finalizedAt: string;
 }) {
+  if(input.template.id==='anymind-haleon-weekly-v1') return buildAnyMindPowerPoint(input);
   const snapshot = snapshotWithTemplate(input.snapshot, input.template),
     pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';

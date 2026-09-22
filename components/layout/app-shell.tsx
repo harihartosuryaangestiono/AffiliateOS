@@ -22,6 +22,7 @@ import {
   ChevronsUpDown,
   Command as CommandIcon,
   ArrowUpRight,
+  ListChecks,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -54,7 +55,7 @@ const groups: {
   name: string;
   items: [string, string, typeof LayoutDashboard][];
 }[] = [
- {name:'WORKSPACE',items:[['Dashboard','dashboard',LayoutDashboard],['My Work','my-work',CheckSquare]]},
+ {name:'WORKSPACE',items:[['Dashboard','dashboard',LayoutDashboard],['Action Center','actions',ListChecks],['My Work','my-work',CheckSquare]]},
  {name:'PERFORMANCE',items:[['Overview','performance',ChartNoAxesCombined],['TikTok','tiktok',Music2],['Shopee','shopee',ShoppingBag]]},
  {name:'CREATORS',items:[['Creator Database','creators',Users],['Acquisition','creators/acquisition',Plus],['Outreach','creators/outreach',MessageCircle],['Performance Watch','creators/performance',ChartNoAxesCombined]]},
  {name:'ACTIVATIONS',items:[['Campaigns','campaigns',Flag],['HSL','hsl',Layers],['Peak Days','peak-days',CalendarDays],['Samples','samples',Package]]},

@@ -7,9 +7,17 @@ export type ReportTemplate = {
   metricOrder: string[];
   sections: string[];
   exportFormats: ('xlsx' | 'pptx')[];
+  sourceHash?: string;
+  slideMappingVersion?: string;
 };
 
 export const reportTemplates: ReportTemplate[] = [
+  {
+    id: 'anymind-haleon-weekly-v1', version: '1.0.0', name: 'AnyMind / Haleon Weekly', marketplaces: ['Shopee'], periodType: 'Weekly',
+    metricOrder: ['affiliateGmv','orders','quantity','affiliatesWithSales','commission','roi','costRatio','storeRevenue','affiliateContribution'],
+    sections: ['Snapshot Performance','Manual Narratives','Source Lineage'], exportFormats: ['xlsx','pptx'],
+    sourceHash: 'e194192eff217d9695561f7ad79683ed22d9f1b0cbfdbce88c0fea1ac02a1a1d', slideMappingVersion: '1.0.0',
+  },
   {
     id: 'internal-affiliate-weekly',
     version: '1.0.0',
@@ -141,13 +149,13 @@ export const reportTemplates: ReportTemplate[] = [
 
 export function templateFor(reportType: string, marketplace: string) {
   if (reportType === 'Haleon Weekly')
-    return reportTemplates.find((item) => item.id === 'shopee-haleon-weekly')!;
+    return reportTemplates.find((item) => item.id === 'anymind-haleon-weekly-v1')!;
   if (reportType === 'Monthly Recap')
     return reportTemplates.find((item) => item.id === 'monthly-recap')!;
   if (reportType === 'Campaign Report')
     return reportTemplates.find((item) => item.id === 'campaign-peak-day')!;
   if (marketplace === 'Shopee')
-    return reportTemplates.find((item) => item.id === 'shopee-simba-weekly')!;
+    return reportTemplates.find((item) => item.id === 'anymind-haleon-weekly-v1')!;
   if (marketplace === 'TikTok')
     return reportTemplates.find((item) => item.id === 'tiktok-simba-weekly')!;
   return reportTemplates[0];

@@ -29,6 +29,7 @@ export async function loadWorkspace() {
     'shopee_performance_daily',
     'import_jobs',
     'activity_logs',
+    'profiles',
     'campaign_creators',
     ...operationTables.filter(t=>t!=='campaign_creators'),
   ];
@@ -57,7 +58,10 @@ export async function loadWorkspace() {
     tableNames.map((t, i) => [t, results[i].data || []]),
   );
   const initialData = {
-    operations: Object.fromEntries(operationTables.filter(t=>t!=='campaign_creators').map(t=>[t,byTable[t]])),
+    operations: {
+      ...Object.fromEntries(operationTables.filter(t=>t!=='campaign_creators').map(t=>[t,byTable[t]])),
+      profiles: byTable.profiles,
+    },
     entities: Object.fromEntries(
       entities.map((e) => [e, byTable[e]]),
     ) as WorkspaceData['entities'],
