@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   LoaderCircle,
   Download,
+  Settings,
 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
@@ -30,6 +31,10 @@ import { detectMapping, mappings, sourceSemantics, validateRows, type RawRow } f
 import type { ImportJob } from '@/types/domain';
 import { toast } from 'sonner';
 import { preserveDemoFile, readDemoFile } from '@/lib/data/demo-files';
+import { getFreshnessStatus } from '@/lib/integrations/health';
+import { records } from '@/lib/operations/config';
+import type { IntegrationSyncRun } from '@/lib/integrations/types';
+
 export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
   const { data, setData, demo, role, name } = useWorkspace();
   const [file, setFile] = useState<File | null>(null),
@@ -37,7 +42,8 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
     [mapping, setMapping] = useState<Record<string, string>>({}),
     [step, setStep] = useState(0),
     [error, setError] = useState(''),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [historyTab, setHistoryTab] = useState<'manual' | 'automated'>('manual');
   const input = useRef<HTMLInputElement>(null);
   const canImport = ['Admin','Affiliate Manager','Analyst'].includes(role);
   const validation = market
@@ -174,6 +180,10 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
     a.click();
     URL.revokeObjectURL(url);
   }
+  const syncRuns = records(data, 'integration_sync_runs') as unknown as IntegrationSyncRun[];
+  const shopeeFreshness = getFreshnessStatus(data, 'Shopee');
+  const tiktokFreshness = getFreshnessStatus(data, 'TikTok');
+
   return (
     <>
       {market && (
@@ -186,15 +196,60 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
         <div>
           <div className="eyebrow">DATA OPERATIONS</div>
           <h1>{market ? market + ' imports' : 'Import Center'}</h1>
-          <p>Reliable performance starts with traceable data.</p>
+          <p>Reliable performance starts with traceable data. Manual reports and automated API syncs feed one canonical pipeline.</p>
         </div>
-        {market && (
+        {market ? (
           <Button variant="outline" onClick={sample}>
             <Download size={14} />
             Download CSV template
           </Button>
+        ) : (
+          <Link href="/settings/integrations" className={buttonVariants({ variant: 'outline' })}>
+            <Settings size={14} />
+            Integrations Settings
+          </Link>
         )}
       </div>
+
+      {!market && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="panel flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <PlatformIcon market="Shopee" />
+              <div>
+                <div className="font-semibold text-sm">Shopee Data Freshness</div>
+                <div className="text-xs text-muted-foreground">{shopeeFreshness.label}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${shopeeFreshness.status === 'FRESH' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                {shopeeFreshness.status}
+              </span>
+              <Link href="/settings/integrations" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+                <Settings size={14} />
+              </Link>
+            </div>
+          </div>
+          <div className="panel flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <PlatformIcon market="TikTok" />
+              <div>
+                <div className="font-semibold text-sm">TikTok Data Freshness</div>
+                <div className="text-xs text-muted-foreground">{tiktokFreshness.label}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${tiktokFreshness.status === 'FRESH' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                {tiktokFreshness.status}
+              </span>
+              <Link href="/settings/integrations" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+                <Settings size={14} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!market ? (
         <div className="marketplace-grid">
           {(['TikTok', 'Shopee'] as const).map((m) => (
@@ -431,116 +486,187 @@ export function ImportCenter({ market }: { market?: 'TikTok' | 'Shopee' }) {
           </div>
         </section>
       )}
+
       <section className="panel data-panel">
-        <div className="panel-heading">
-          <h2>Import history</h2>
-          <span className="text-xs text-muted-foreground">
-            {jobs.length} files
-          </span>
+        <div className="panel-heading flex items-center justify-between border-b pb-4 mb-4">
+          <div className="flex items-center gap-6">
+            <button
+              className={`text-sm font-semibold pb-1 border-b-2 transition-colors ${
+                historyTab === 'manual'
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => setHistoryTab('manual')}
+            >
+              Manual File Imports ({jobs.length})
+            </button>
+            <button
+              className={`text-sm font-semibold pb-1 border-b-2 transition-colors ${
+                historyTab === 'automated'
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => setHistoryTab('automated')}
+            >
+              Automated Sync Runs ({syncRuns.length})
+            </button>
+          </div>
+          <Link href="/settings/integrations" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
+            <Settings size={12} /> Manage Connectors
+          </Link>
         </div>
-        {jobs.length ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>File name</TableHead>
-                <TableHead>Marketplace</TableHead>
-                <TableHead>Uploaded</TableHead>
-                <TableHead>Rows</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Source</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {jobs.map((j) => (
-                <TableRow key={j.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <FileSpreadsheet size={17} />
-                      {j.filename}
-                    </div>
-                  </TableCell>
-                  <TableCell>{j.marketplace}</TableCell>
-                  <TableCell>{j.created_at.slice(0, 10)}</TableCell>
-                  <TableCell>{j.rows}</TableCell>
-                  <TableCell>
-                    <Status value={j.status} />
-                  </TableCell>
-                  <TableCell>
-                    {!demo && (
-                      <a
-                        className={buttonVariants({ variant: 'ghost' })}
-                        href={`/api/imports/${j.id}/file`}
-                      >
-                        Original file
-                      </a>
-                    )}
-                    {j.raw_rows && demo && (
-                      <Button
-                        variant="ghost"
-                        onClick={async () => {
-                          try {
-                            const original = await readDemoFile(j.id);
-                            if (!original)
-                              throw Error(
-                                'Original file is no longer in this browser.',
+
+        {historyTab === 'manual' ? (
+          jobs.length ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>File name</TableHead>
+                  <TableHead>Marketplace</TableHead>
+                  <TableHead>Uploaded</TableHead>
+                  <TableHead>Rows</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Source</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {jobs.map((j) => (
+                  <TableRow key={j.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <FileSpreadsheet size={17} />
+                        {j.filename}
+                      </div>
+                    </TableCell>
+                    <TableCell>{j.marketplace}</TableCell>
+                    <TableCell>{j.created_at.slice(0, 10)}</TableCell>
+                    <TableCell>{j.rows}</TableCell>
+                    <TableCell>
+                      <Status value={j.status} />
+                    </TableCell>
+                    <TableCell>
+                      {!demo && (
+                        <a
+                          className={buttonVariants({ variant: 'ghost' })}
+                          href={`/api/imports/${j.id}/file`}
+                        >
+                          Original file
+                        </a>
+                      )}
+                      {j.raw_rows && demo && (
+                        <Button
+                          variant="ghost"
+                          onClick={async () => {
+                            try {
+                              const original = await readDemoFile(j.id);
+                              if (!original)
+                                throw Error(
+                                  'Original file is no longer in this browser.',
+                                );
+                              const url = URL.createObjectURL(original);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = j.filename;
+                              a.click();
+                              URL.revokeObjectURL(url);
+                            } catch (e) {
+                              toast.error(
+                                e instanceof Error
+                                  ? e.message
+                                  : 'Download failed',
                               );
-                            const url = URL.createObjectURL(original);
+                            }
+                          }}
+                        >
+                          Original file
+                        </Button>
+                      )}
+                      {j.raw_rows ? (
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            const blob = new Blob(
+                              [
+                                JSON.stringify(
+                                  { job: j, raw_rows: j.raw_rows },
+                                  null,
+                                  2,
+                                ),
+                              ],
+                              { type: 'application/json' },
+                            );
+                            const url = URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
-                            a.download = j.filename;
+                            a.download = j.filename + '.audit.json';
                             a.click();
                             URL.revokeObjectURL(url);
-                          } catch (e) {
-                            toast.error(
-                              e instanceof Error
-                                ? e.message
-                                : 'Download failed',
-                            );
-                          }
-                        }}
-                      >
-                        Original file
-                      </Button>
-                    )}
-                    {j.raw_rows ? (
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          const blob = new Blob(
-                            [
-                              JSON.stringify(
-                                { job: j, raw_rows: j.raw_rows },
-                                null,
-                                2,
-                              ),
-                            ],
-                            { type: 'application/json' },
-                          );
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = j.filename + '.audit.json';
-                          a.click();
-                          URL.revokeObjectURL(url);
-                        }}
-                      >
-                        Download audit
-                      </Button>
-                    ) : demo ? (
-                      <span className="text-xs text-muted-foreground">
-                        Seed data
-                      </span>
-                    ) : null}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                          }}
+                        >
+                          Download audit
+                        </Button>
+                      ) : demo ? (
+                        <span className="text-xs text-muted-foreground">
+                          Seed data
+                        </span>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <EmptyState
+              title="No imports yet"
+              description="Upload your first marketplace report to start organizing your performance data."
+            />
+          )
         ) : (
-          <EmptyState
-            title="No imports yet"
-            description="Upload your first marketplace report to start organizing your performance data."
-          />
+          syncRuns.length ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Provider</TableHead>
+                  <TableHead>Capability</TableHead>
+                  <TableHead>Started At</TableHead>
+                  <TableHead>Fetched / Norm</TableHead>
+                  <TableHead>Trigger</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Detail / Error</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {syncRuns.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-medium capitalize">{r.provider}</TableCell>
+                    <TableCell>{r.capability}</TableCell>
+                    <TableCell>{r.started_at ? String(r.started_at).slice(0, 16).replace('T', ' ') : '—'}</TableCell>
+                    <TableCell>{r.fetched_records} / {r.normalized_records}</TableCell>
+                    <TableCell>
+                      <span className="text-xs px-2 py-0.5 rounded bg-muted font-mono">{r.trigger_type}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Status value={r.status === 'SUCCEEDED' ? 'Completed' : r.status === 'FAILED' ? 'Failed' : r.status} />
+                    </TableCell>
+                    <TableCell>
+                      {r.error_summary ? (
+                        <span className="text-xs text-red-400 font-mono" title={r.error_summary}>
+                          {r.error_summary.length > 40 ? r.error_summary.slice(0, 40) + '…' : r.error_summary}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Canonical normalized</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <EmptyState
+              title="No automated sync runs yet"
+              description="Automated connector sync runs will appear here as API connectors execute."
+            />
+          )
         )}
       </section>
     </>

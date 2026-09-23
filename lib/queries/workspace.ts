@@ -44,7 +44,7 @@ export async function loadWorkspace() {
           .order('id')
           .range(offset, offset + 999);
         if (error) {
-          if (['brand_mappings', 'report_datasets'].includes(table)) return { data: [], error: null };
+          if (['brand_mappings', 'report_datasets', 'integration_connections', 'integration_sync_runs'].includes(table)) return { data: [], error: null };
           return { data: null, error };
         }
         all.push(...(data || []));

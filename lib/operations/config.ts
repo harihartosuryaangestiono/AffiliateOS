@@ -33,6 +33,8 @@ export const operationConfig:Record<string,OpConfig> = {
   operational_actions:{title:'Action Center',singular:'Action',immutable:true,fields:[],columns:['priority','title','category','due_at','status']},
   brand_mappings:{title:'Brand mappings',singular:'Brand mapping',fields:[rel('product_id','Product','products'),rel('brand_id','Brand','brands'),choice('status','Status',['mapped','unmapped','ambiguous'])],columns:['product_id','brand_id','status']},
   report_datasets:{title:'Report datasets',singular:'Report dataset',immutable:true,fields:[rel('report_id','Report','reports'),f('dataset_schema_version','Schema version')],columns:['report_id','dataset_schema_version','created_at']},
+  integration_connections:{title:'Integrations',singular:'Integration connection',fields:[f('provider','Provider'),f('marketplace','Marketplace'),f('status','Status')],columns:['provider','marketplace','status','last_sync_at']},
+  integration_sync_runs:{title:'Automated sync runs',singular:'Sync run',immutable:true,fields:[f('provider','Provider'),f('capability','Capability'),f('status','Status')],columns:['provider','capability','status','created_at']},
 };
 operationConfig.tasks={...entityConfig.tasks,fields:entityConfig.tasks.fields};
 export const operationTables = Object.keys(operationConfig).filter(t=>t!=='tasks');
