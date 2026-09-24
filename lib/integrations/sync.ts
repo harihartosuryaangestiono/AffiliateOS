@@ -15,7 +15,7 @@ const cooldownMap = new Map<string, number>();
 
 export function classifyError(err: unknown): { category: ErrorCategory; message: string } {
   const msg = err instanceof Error ? err.message : String(err);
-  if (/AUTH|TOKEN|UNAUTHORIZED|EXPIRED|ACCESS REQUIRED|CREDENTIALS/i.test(msg)) {
+  if (/AUTH|TOKEN|UNAUTHORIZED|EXPIRED|ACCESS REQUIRED|CREDENTIALS|FILE_IMPORT|DIRECT API/i.test(msg)) {
     return { category: 'AUTH', message: msg };
   }
   if (/RATE|QUOTA|THROTTLE|BACKOFF|429/i.test(msg)) {

@@ -11,7 +11,8 @@ export type ConnectionStatus =
   | 'DEGRADED'
   | 'ERROR'
   | 'REAUTH_REQUIRED'
-  | 'DISABLED';
+  | 'DISABLED'
+  | 'FILE_IMPORT';
 
 export type Capability =
   | 'ORDERS'

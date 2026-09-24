@@ -116,7 +116,7 @@ export function displayValue(
       brandIds.includes(String(c.brand_id)),
     ).length;
   }
-  return r[key] ?? '—';
+  return String(r[key] ?? '—');
 }
 export function EntityTable({
   entity,

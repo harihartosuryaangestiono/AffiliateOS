@@ -9,6 +9,7 @@ import {
   mergePersistedActions,
   type OperationalAction,
 } from '@/lib/intelligence/actions';
+import type { RecordData } from '@/types/domain';
 import { Button } from '@/components/ui/button';
 import { Heading, MetricCards } from './primitives';
 import { toast } from 'sonner';
@@ -35,7 +36,7 @@ const href = (a: OperationalAction) =>
               ? '/tasks'
               : '/my-work';
 export function ActionCenter({ compact = false }: { compact?: boolean }) {
-  const { data, demo } = useWorkspace(),
+  const { data, setData, demo, name } = useWorkspace(),
     [filter, setFilter] = useState('All'),
     [busy, setBusy] = useState('');
   const actions = useMemo(
@@ -68,7 +69,90 @@ export function ActionCenter({ compact = false }: { compact?: boolean }) {
     setBusy(String(payload.id || payload.action));
     try {
       if (demo) {
-        toast.info('Demo action preview is read-only.');
+        const currentActions = records(data, 'operational_actions');
+        if (payload.action === 'transition') {
+          const actionId = String(payload.id);
+          const act = actions.find((a) => a.id === actionId);
+          if (!act) return;
+          const statusStr = typeof payload.status === 'string' ? payload.status : 'OPEN';
+          const assignedToStr = typeof payload.assignedTo === 'string' || payload.assignedTo === null ? payload.assignedTo : undefined;
+          const snoozedUntilStr = typeof payload.snoozedUntil === 'string' ? payload.snoozedUntil : null;
+          const noteStr = typeof payload.note === 'string' ? payload.note : null;
+
+          const updated = currentActions.some((a) => a.id === actionId)
+            ? currentActions.map((a) =>
+                a.id === actionId
+                  ? ({
+                      ...a,
+                      status: statusStr,
+                      assigned_to: assignedToStr !== undefined ? assignedToStr : a.assigned_to,
+                      snoozed_until: snoozedUntilStr !== null ? snoozedUntilStr : a.snoozed_until,
+                      resolution_note: noteStr !== null ? noteStr : a.resolution_note,
+                    } as RecordData)
+                  : a,
+              )
+            : ([
+                ...currentActions,
+                {
+                  ...act,
+                  status: statusStr,
+                  assigned_to: assignedToStr !== undefined ? assignedToStr : act.assigned_to,
+                  snoozed_until: snoozedUntilStr !== null ? snoozedUntilStr : act.snoozed_until,
+                  resolution_note: noteStr !== null ? noteStr : act.resolution_note,
+                },
+              ] as RecordData[]);
+          setData({
+            ...data,
+            operations: {
+              ...data.operations,
+              operational_actions: updated,
+            },
+          });
+          toast.success(`Action updated to ${statusStr}`);
+          return;
+        }
+        if (payload.action === 'create_task') {
+          const actionId = String(payload.id);
+          const act = actions.find((a) => a.id === actionId);
+          if (!act) return;
+          const taskId = `tsk-${Date.now().toString(36)}`;
+          const due = String(act.due_at || new Date().toISOString()).slice(0, 10);
+          const newTask: RecordData = {
+            id: taskId,
+            name: act.title,
+            status: 'To Do',
+            priority: act.priority === 'P0' ? 'Urgent' : act.priority === 'P1' ? 'High' : 'Medium',
+            due_date: due,
+            owner: name,
+            notes: act.reason || act.title,
+            created_at: new Date().toISOString(),
+          };
+          const updated = currentActions.some((a) => a.id === actionId)
+            ? currentActions.map((a) =>
+                a.id === actionId ? ({ ...a, source_task_id: taskId, status: 'IN_PROGRESS' } as RecordData) : a,
+              )
+            : ([
+                ...currentActions,
+                {
+                  ...act,
+                  source_task_id: taskId,
+                  status: 'IN_PROGRESS',
+                },
+              ] as RecordData[]);
+          setData({
+            ...data,
+            entities: {
+              ...data.entities,
+              tasks: [newTask, ...data.entities.tasks],
+            },
+            operations: {
+              ...data.operations,
+              operational_actions: updated,
+            },
+          });
+          toast.success('Task created and added to My Work');
+          return;
+        }
         return;
       }
       const r = await fetch('/api/actions', {
@@ -218,7 +302,7 @@ export function ActionCenter({ compact = false }: { compact?: boolean }) {
                       <select
                         aria-label={`Assign ${a.title}`}
                         value={String(a.assigned_to || '')}
-                        disabled={Boolean(busy) || demo}
+                        disabled={Boolean(busy)}
                         onChange={(e) =>
                           call({
                             action: 'transition',
@@ -241,7 +325,7 @@ export function ActionCenter({ compact = false }: { compact?: boolean }) {
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={Boolean(busy) || demo}
+                          disabled={Boolean(busy)}
                           onClick={() =>
                             call({
                               action: 'transition',
@@ -255,7 +339,7 @@ export function ActionCenter({ compact = false }: { compact?: boolean }) {
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={Boolean(busy) || demo}
+                          disabled={Boolean(busy)}
                           onClick={() =>
                             call({
                               action: 'transition',
@@ -272,7 +356,7 @@ export function ActionCenter({ compact = false }: { compact?: boolean }) {
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={Boolean(busy) || demo}
+                          disabled={Boolean(busy)}
                           onClick={() =>
                             call({ action: 'create_task', id: a.id })
                           }
@@ -281,7 +365,7 @@ export function ActionCenter({ compact = false }: { compact?: boolean }) {
                         </Button>
                         <Button
                           size="sm"
-                          disabled={Boolean(busy) || demo}
+                          disabled={Boolean(busy)}
                           onClick={() =>
                             call({
                               action: 'transition',
@@ -296,7 +380,7 @@ export function ActionCenter({ compact = false }: { compact?: boolean }) {
                         <Button
                           size="sm"
                           variant="ghost"
-                          disabled={Boolean(busy) || demo}
+                          disabled={Boolean(busy)}
                           onClick={() =>
                             call({
                               action: 'transition',
@@ -314,7 +398,7 @@ export function ActionCenter({ compact = false }: { compact?: boolean }) {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={Boolean(busy) || demo}
+                        disabled={Boolean(busy)}
                         onClick={() =>
                           call({
                             action: 'transition',

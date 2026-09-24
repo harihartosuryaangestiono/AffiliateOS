@@ -29,6 +29,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWorkspace } from '@/components/layout/workspace-provider';
 import { money, number, sum, trend, initials } from '@/lib/data/metrics';
+import { AIDailyBriefCard } from './daily-brief';
 export function TrendChart({
   market = 'Overall',
   days = 30,
@@ -114,7 +115,7 @@ export function PlatformIcon({ market }: { market: string }) {
   );
 }
 export function Dashboard() {
-  const { data, name } = useWorkspace();
+  const { data, name, demo } = useWorkspace();
   const [period, setPeriod] = useState('This Month');
   const [market, setMarket] = useState('Overall');
   const days = period === 'Today' ? 1 : period === '7 Days' ? 7 : 30;
@@ -194,10 +195,11 @@ export function Dashboard() {
           </TabsList>
         </Tabs>
         <span className="text-xs text-muted-foreground">
-          Demo period · Sep {31 - days}–30, 2026 <span className="mx-2">·</span>{' '}
+          {demo ? 'Demo period · ' : ''}Sep {31 - days}–30, 2026 <span className="mx-2">·</span>{' '}
           IDR
         </span>
       </div>
+      <AIDailyBriefCard />
       <div className="kpi-grid">
         {kpis.map((k, i) => (
           <section className={'kpi-card metric-tone-' + i} key={k.label}>

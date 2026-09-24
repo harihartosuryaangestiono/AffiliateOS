@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
+    "@google/genai": "^2.24.0",
     "@shadcn/react": "0.3.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0",

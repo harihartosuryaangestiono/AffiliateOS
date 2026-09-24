@@ -25,6 +25,7 @@ import {
   ArrowUpRight,
   ListChecks,
 } from 'lucide-react';
+import { AskAffiliateOSButton } from '@/components/workflows/ask-affiliateos';
 import {
   SidebarProvider,
   Sidebar,
@@ -88,6 +89,7 @@ const groups: {
       ['Creator Database', 'creators', Users],
       ['Acquisition', 'creators/acquisition', Plus],
       ['Outreach', 'creators/outreach', MessageCircle],
+      ['Communication Workspace', 'creators/communication', MessageCircle],
       ['Performance Watch', 'creators/performance', ChartNoAxesCombined],
     ],
   },
@@ -277,6 +279,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span>{title}</span>
           </div>
           <div className="topbar-actions">
+            <AskAffiliateOSButton />
             <Link
               href="/actions"
               aria-label="Open Action Center"

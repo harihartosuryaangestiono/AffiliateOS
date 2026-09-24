@@ -11,6 +11,7 @@ import {
 } from '@/components/operations/system-pages';
 import { entities, type Entity } from '@/types/domain';
 import { ActionCenter } from '@/components/workflows/action-center';
+import { CommunicationWorkspace } from '@/components/workflows/communication';
 export default async function Page({
   params,
   searchParams,
@@ -38,6 +39,7 @@ export default async function Page({
   if (module === 'reports') return <Reports />;
   if (module === 'my-work') return <MyWork />;
   if (module === 'actions') return <ActionCenter />;
+  if (module === 'communication') return <CommunicationWorkspace />;
   if (module === 'performance') return <PerformanceOverview />;
   if (module === 'hsl') return <HSL />;
   if (module === 'samples') return <Samples />;

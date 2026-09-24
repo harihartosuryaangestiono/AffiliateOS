@@ -27,7 +27,7 @@ export function EntityForm({
   const { data, save } = useWorkspace();
   const cfg = config[entity];
   const [values, setValues] = useState<
-    Record<string, string | number | null | undefined>
+    Record<string, string | number | boolean | null | undefined>
   >(() =>
     Object.fromEntries(
       cfg.fields.map((f) => [f.key, record?.[f.key] ?? (f.options?.[0] || '')]),

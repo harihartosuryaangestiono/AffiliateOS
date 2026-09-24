@@ -44,4 +44,229 @@ export function PerformanceWatch({creatorId}:{creatorId?:string}){
 export function ActivationTable({campaignId,creatorId}:{campaignId?:string;creatorId?:string}){
  const {mutate}=useWorkspace();return <OperationsTable table="campaign_creators" where={{...(campaignId?{campaign_id:campaignId}:{}),...(creatorId?{creator_id:creatorId}:{})}} createValues={{...(campaignId?{campaign_id:campaignId}:{}),...(creatorId?{creator_id:creatorId}:{})}} bulk={(selected,clear)=><Button size="sm" onClick={()=>mutate(selected.map(r=>({table:'campaign_creators',record:{...r,status:'Locked'}}))).then(clear).catch(e=>toast.error(e.message))}>Lock selected creators</Button>}/>;
 }
-export function CreatorQuickActions({id}:{id:string}){const {canEdit}=useWorkspace(),[action,setAction]=useState('');if(!canEdit('creators'))return null;return <><div className="ops-actions"><Button size="sm" variant="outline" onClick={()=>setAction('creator_outreach')}>Contact creator</Button><Button size="sm" variant="outline" onClick={()=>setAction('campaign_creators')}>Add / lock campaign</Button><Button size="sm" variant="outline" onClick={()=>setAction('sample_seedings')}>Seed sample</Button><Button size="sm" variant="outline" onClick={()=>setAction('tasks')}>Create task</Button></div>{action==='tasks'?<EntityForm entity="tasks" record={{creator_id:id}} onClose={()=>setAction('')}/>:action&&<OpForm table={action} record={{creator_id:id}} onClose={()=>setAction('')}/>}</>;}
+export function CreatorQuickActions({id}:{id:string}){const {canEdit}=useWorkspace(),[action,setAction]=useState('');if(!canEdit('creators'))return null;return <><div className="ops-actions"><Link href={'/creators/communication?creator_id='+id}><Button size="sm" variant="outline"><MessageCircle size={14} className="mr-1.5"/>Communication Workspace</Button></Link><Button size="sm" variant="outline" onClick={()=>setAction('creator_outreach')}>Contact creator</Button><Button size="sm" variant="outline" onClick={()=>setAction('campaign_creators')}>Add / lock campaign</Button><Button size="sm" variant="outline" onClick={()=>setAction('sample_seedings')}>Seed sample</Button><Button size="sm" variant="outline" onClick={()=>setAction('tasks')}>Create task</Button></div>{action==='tasks'?<EntityForm entity="tasks" record={{creator_id:id}} onClose={()=>setAction('')}/>:action&&<OpForm table={action} record={{creator_id:id}} onClose={()=>setAction('')}/>}</>;}
+
+export function CreatorOperationalTimeline({ creatorId }: { creatorId: string }) {
+  const { data } = useWorkspace();
+  const creator = data.entities.creators.find((c) => c.id === creatorId);
+  if (!creator) return null;
+
+  const outreachList = records(data, 'creator_outreach').filter((r) => r.creator_id === creatorId);
+  const sampleList = records(data, 'sample_seedings').filter((r) => r.creator_id === creatorId);
+  const hslList = records(data, 'hsl_activations').filter((r) => r.creator_id === creatorId);
+  const campaignList = data.campaign_creators.filter((r) => r.creator_id === creatorId);
+
+  const isImported = true;
+  const isAcquisition = Boolean(creator.acquisition_stage || creator.relationship_status);
+  const isContacted = outreachList.some((r) => r.contacted_at);
+  const isFollowUp = outreachList.some((r) => r.follow_up_at || r.status === 'Follow Up');
+  const isResponded = outreachList.some((r) => ['Interested', 'Converted', 'Negotiating', 'Agreed', 'Declined'].includes(String(r.status)));
+  const isSample = sampleList.length > 0;
+  const isHsl = hslList.length > 0;
+  const isCampaign = campaignList.length > 0;
+  const isDeal = campaignList.some((r) => r.status === 'Locked' || r.status === 'Confirmed');
+
+  const stages = [
+    { key: 'imported', label: 'Imported', done: isImported },
+    { key: 'acquisition', label: 'Acquisition', done: isAcquisition },
+    { key: 'contacted', label: 'Contacted', done: isContacted },
+    { key: 'follow_up', label: 'Follow-Up', done: isFollowUp },
+    { key: 'responded', label: 'Responded', done: isResponded },
+    { key: 'sample', label: 'Sample', done: isSample },
+    { key: 'hsl', label: 'HSL', done: isHsl },
+    { key: 'campaign', label: 'Campaign', done: isCampaign },
+    { key: 'deal', label: 'Deal', done: isDeal },
+  ];
+
+  return (
+    <div className="panel detail-panel mb-5">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-semibold">Creator Operational Timeline</h3>
+          <p className="text-xs text-muted-foreground">Full lifecycle from lead import to active campaign deal</p>
+        </div>
+        <Link href={`/creators/communication?creator_id=${creatorId}`}>
+          <Button size="sm" variant="outline" className="gap-2">
+            <MessageCircle size={14} />
+            Open Communication Workspace →
+          </Button>
+        </Link>
+      </div>
+      <div className="flex items-center gap-1 overflow-x-auto py-2">
+        {stages.map((st, i) => (
+          <div key={st.key} className="flex items-center gap-1 shrink-0">
+            <div
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                st.done
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
+                  : 'bg-muted text-muted-foreground border border-transparent'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${st.done ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`} />
+              {st.label}
+            </div>
+            {i < stages.length - 1 && <span className="text-muted-foreground/40 text-xs">→</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function CreatorPerformanceInsightCard({ creatorId }: { creatorId: string }) {
+  const [insight, setInsight] = useState<{
+    summary: string;
+    positive_signals: string[];
+    risk_signals: string[];
+    suggested_next_steps: string[];
+    data_limitations: string[];
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [feedbackGiven, setFeedbackGiven] = useState<'HELPFUL' | 'NOT_HELPFUL' | null>(null);
+
+  async function fetchInsight() {
+    setLoading(true);
+    setFeedbackGiven(null);
+    try {
+      const res = await fetch('/api/ai/creator-insight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ creatorId, language: 'id' }),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        data?: {
+          summary: string;
+          positive_signals: string[];
+          risk_signals: string[];
+          suggested_next_steps: string[];
+          data_limitations: string[];
+        };
+      };
+      if (!res.ok) throw new Error(json.error || 'Failed to fetch AI insight');
+      if (json.data) setInsight(json.data);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function sendFeedback(rating: 'HELPFUL' | 'NOT_HELPFUL') {
+    try {
+      await fetch('/api/ai/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feature: 'CREATOR_INSIGHT', rating }),
+      });
+      setFeedbackGiven(rating);
+      toast.success(rating === 'HELPFUL' ? 'Terima kasih atas feedback Anda!' : 'Feedback tercatat.');
+    } catch {
+      // silent fallback
+    }
+  }
+
+  return (
+    <div className="panel detail-panel mb-5 border-blue-900/30 bg-blue-950/10">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold flex items-center gap-1.5 text-blue-200">
+            <span>✨</span> Gemini AI Performance Insight
+          </span>
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-900/60 text-blue-300 border border-blue-800">
+            AI Insight
+          </span>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={fetchInsight}
+          disabled={loading}
+          className="text-xs h-7 gap-1"
+        >
+          {loading ? 'Analyzing...' : insight ? 'Regenerate' : 'Generate Insight'}
+        </Button>
+      </div>
+
+      {!insight && !loading && (
+        <div className="text-xs text-muted-foreground py-2 flex items-center justify-between">
+          <span>Dapatkan ringkasan performa 7-hari, sinyal pertumbuhan/penurunan, dan saran langkah selanjutnya dari data deterministik AffiliateOS.</span>
+        </div>
+      )}
+
+      {insight && (
+        <div className="space-y-3 text-xs">
+          <p className="text-slate-200 leading-relaxed font-normal bg-slate-900/60 p-2.5 rounded border border-slate-800">
+            {insight.summary}
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {insight.positive_signals.length > 0 && (
+              <div className="p-2.5 rounded bg-emerald-950/20 border border-emerald-900/40 space-y-1">
+                <span className="font-semibold text-emerald-400 text-[11px] block">📈 Sinyal Positif</span>
+                <ul className="list-disc list-inside text-emerald-200/90 space-y-0.5">
+                  {insight.positive_signals.map((s, idx) => (
+                    <li key={idx}>{s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {insight.risk_signals.length > 0 && (
+              <div className="p-2.5 rounded bg-amber-950/20 border border-amber-900/40 space-y-1">
+                <span className="font-semibold text-amber-400 text-[11px] block">⚠️ Sinyal Perhatian / Risiko</span>
+                <ul className="list-disc list-inside text-amber-200/90 space-y-0.5">
+                  {insight.risk_signals.map((s, idx) => (
+                    <li key={idx}>{s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {insight.suggested_next_steps.length > 0 && (
+            <div className="p-2.5 rounded bg-slate-900/70 border border-slate-800 space-y-1">
+              <span className="font-semibold text-slate-300 text-[11px] block">🎯 Saran Langkah Operasional</span>
+              <ul className="list-disc list-inside text-slate-300 space-y-0.5">
+                {insight.suggested_next_steps.map((step, idx) => (
+                  <li key={idx}>{step}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
+            <span className="italic">
+              {insight.data_limitations.join(' · ') || 'Berdasarkan data performa harian resmi'}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <span>Helpful?</span>
+              <button
+                type="button"
+                onClick={() => sendFeedback('HELPFUL')}
+                disabled={feedbackGiven !== null}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                  feedbackGiven === 'HELPFUL' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
+                }`}
+              >
+                👍 Yes
+              </button>
+              <button
+                type="button"
+                onClick={() => sendFeedback('NOT_HELPFUL')}
+                disabled={feedbackGiven !== null}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                  feedbackGiven === 'NOT_HELPFUL' ? 'bg-red-600 text-white' : 'hover:bg-slate-800 text-slate-300'
+                }`}
+              >
+                👎 No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+

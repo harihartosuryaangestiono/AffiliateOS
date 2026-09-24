@@ -4,6 +4,8 @@ import { useSearchParams } from 'next/navigation';
 import {
   ActivationTable,
   CreatorQuickActions,
+  CreatorOperationalTimeline,
+  CreatorPerformanceInsightCard,
   Outreach,
   PerformanceWatch,
 } from '@/components/workflows/creators';
@@ -250,6 +252,8 @@ export function EntityDetail({ entity, id }: { entity: Entity; id: string }) {
         </div>
         {entity === 'creators' && <CreatorQuickActions id={id} />}
       </section>
+      {entity === 'creators' && <CreatorOperationalTimeline creatorId={id} />}
+      {entity === 'creators' && <CreatorPerformanceInsightCard creatorId={id} />}
       <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
         <TabsList variant="line" className="tabs-nav w-full justify-start">
           {tabs.map((t) => (

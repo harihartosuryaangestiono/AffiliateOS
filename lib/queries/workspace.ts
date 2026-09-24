@@ -12,6 +12,7 @@ export async function loadWorkspace() {
       demo: true,
       role: 'Admin' as Role,
       name: 'Demo Operator',
+      workspaceId: 'demo-workspace',
     };
   if(!configured()) throw Error('Supabase configuration is incomplete.');
   let auth;
@@ -44,7 +45,7 @@ export async function loadWorkspace() {
           .order('id')
           .range(offset, offset + 999);
         if (error) {
-          if (['brand_mappings', 'report_datasets', 'integration_connections', 'integration_sync_runs'].includes(table)) return { data: [], error: null };
+          if (['brand_mappings', 'report_datasets', 'integration_connections', 'integration_sync_runs', 'communication_templates', 'communication_events', 'communication_template_versions', 'communication_preparations', 'ai_request_logs'].includes(table)) return { data: [], error: null };
           return { data: null, error };
         }
         all.push(...(data || []));
@@ -85,5 +86,6 @@ export async function loadWorkspace() {
     demo: false,
     role: profile.role as Role,
     name: profile.name,
+    workspaceId: profile.workspace_id,
   };
 }

@@ -30,12 +30,12 @@ void test('1. Connector Registry & Provider Capabilities', () => {
 void test('2. Live Credentials Safety & Status Resolution', () => {
   const data = seed();
 
-  // Live adapters without env keys MUST report NOT_CONFIGURED
+  // Live adapters without env keys MUST report FILE_IMPORT
   const shopeeStatus = getWorkspaceConnectionStatus(data, 'shopee');
-  assert.equal(shopeeStatus, 'NOT_CONFIGURED', 'Uncredentialed Shopee returns NOT_CONFIGURED');
+  assert.equal(shopeeStatus, 'FILE_IMPORT', 'Uncredentialed Shopee returns FILE_IMPORT');
 
   const tiktokStatus = getWorkspaceConnectionStatus(data, 'tiktok');
-  assert.equal(tiktokStatus, 'NOT_CONFIGURED', 'Uncredentialed TikTok returns NOT_CONFIGURED');
+  assert.equal(tiktokStatus, 'FILE_IMPORT', 'Uncredentialed TikTok returns FILE_IMPORT');
 
   // Mock provider returns HEALTHY
   const mockStatus = getWorkspaceConnectionStatus(data, 'mock-test');
@@ -108,7 +108,10 @@ void test('5. Error Classification & Blocked Credentials', async () => {
   assert.equal(result.success, false, 'Uncredentialed Shopee sync fails safely');
   assert.equal(result.syncRun.status, 'FAILED');
   assert.equal(result.syncRun.error_code, 'AUTH');
-  assert.ok(result.syncRun.error_summary?.includes('BLOCKED'), 'Error summary contains BLOCKED');
+  assert.ok(
+    result.syncRun.error_summary?.includes('BLOCKED') || result.syncRun.error_summary?.includes('DIRECT API NOT USED'),
+    'Error summary contains direct API restriction message',
+  );
 });
 
 void test('6. Data Freshness & Stale Alerts', () => {

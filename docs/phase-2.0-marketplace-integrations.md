@@ -5,10 +5,10 @@
 Phase 2.0 establishes the foundation for automated data ingestion and marketplace connectors in AffiliateOS. It transitions the application from manual report uploads to a structured, repeatable connector architecture capable of performing scheduled and on-demand background synchronizations.
 
 ### Key Principles & Governance
+* **Permanent Product Constraint**: As confirmed in Phase 2.1, AffiliateOS will **NOT** use live Shopee API or TikTok Shop API. Live API integrations, credential forms, OAuth onboarding, polling, web scraping, and browser automation are permanently out of product scope. Standard integration model is **File-Based Data Automation** (`FILE_IMPORT`).
 * **Human Business Confirmations**: `DEFERRED BY USER`. All 8 open questions from Phase 1.7B remain deferred. No production business metric formulas or calculations were altered.
-* **Live Credentials Check**: Environment check confirms no live Shopee or TikTok Open API keys or OAuth secrets are stored in `.env` or system environment. Live connectors return `BLOCKED — CREDENTIALS / PLATFORM ACCESS REQUIRED` as designed.
 * **No Unofficial Workarounds**: Explicitly enforces zero web scraping, zero cookie capture, and zero undocumented private API workarounds.
-* **Unified Normalization**: Both manual CSV/XLSX file uploads and automated API connectors feed through the exact same canonical normalization pipeline (`lib/integrations/normalization.ts`).
+* **Unified Normalization**: Both manual CSV/XLSX file uploads and automated batch files feed through the exact same canonical normalization pipeline (`lib/integrations/normalization.ts`).
 
 ---
 

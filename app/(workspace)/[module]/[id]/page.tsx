@@ -1,4 +1,5 @@
 import { Acquisition, Outreach, PerformanceWatch } from '@/components/workflows/creators';
+import { CommunicationWorkspace } from '@/components/workflows/communication';
 import { MonthlyPlanning } from '@/components/workflows/workspace';
 import { StockWatch, PeakDays } from '@/components/workflows/activations';
 import { Reports } from '@/components/workflows/reports';
@@ -15,6 +16,7 @@ export default async function Page({
   const { module, id } = await params;
   if (module === 'creators' && id === 'acquisition') return <Acquisition />;
   if (module === 'creators' && id === 'outreach') return <Outreach />;
+  if (module === 'creators' && id === 'communication') return <CommunicationWorkspace />;
   if (module === 'creators' && id === 'performance') return <PerformanceWatch />;
   if (module === 'campaigns' && id === 'planning') return <MonthlyPlanning />;
   if (module === 'hsl' && id === 'stock') return <StockWatch />;

@@ -366,7 +366,7 @@ export function buildReportDataset(input: {
   };
 
   // 7. Source Lineage
-  const sources = data.imports
+  const sources = (data.imports || [])
     .filter((job) => currentMetrics.sourceImportIds.includes(job.id))
     .map((job) => ({
       id: job.id,

@@ -176,7 +176,7 @@ export function OpForm({
   const { data, mutate } = useWorkspace(),
     cfg = operationConfig[table];
   const [values, setValues] = useState<
-      Record<string, string | number | null | undefined>
+      Record<string, string | number | boolean | null | undefined>
     >(() =>
       Object.fromEntries(
         cfg.fields.map((f) => [
@@ -422,7 +422,7 @@ export function OperationsTable({
     cols = columns || cfg.columns;
   const linkedName = (
     key: string,
-    value: string | number | null | undefined,
+    value: string | number | boolean | null | undefined,
   ) => {
     const relation = cfg.fields.find((f) => f.key === key)?.relation;
     return relation

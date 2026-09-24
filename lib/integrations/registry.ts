@@ -64,7 +64,7 @@ export function getConnectionStatus(
     id: `conn-${providerId}`,
     provider: providerId,
     marketplace: adapter.marketplace,
-    status: providerId === 'mock-test' ? 'HEALTHY' : 'NOT_CONFIGURED',
+    status: providerId === 'mock-test' ? 'HEALTHY' : 'FILE_IMPORT',
     capabilities: adapter.capabilities,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
