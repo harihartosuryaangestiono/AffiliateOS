@@ -6,6 +6,7 @@ export const PROMPT_VERSIONS = {
   DAILY_BRIEF: 'daily-brief-v1',
   REPORT_NARRATIVE: 'report-narrative-v1',
   ASK_AFFILIATEOS: 'ask-affiliateos-v1',
+  ANALYTICS_INSIGHT: 'analytics-insight-v1',
 } as const;
 
 export const TEMPERATURE_SETTINGS = {
@@ -14,6 +15,7 @@ export const TEMPERATURE_SETTINGS = {
   DAILY_BRIEF: 0.1,
   REPORT_NARRATIVE: 0.1,
   ASK_AFFILIATEOS: 0.1,
+  ANALYTICS_INSIGHT: 0.1,
 } as const;
 
 export function getOutreachPrompt(tone: OutreachTone = 'FRIENDLY', language: 'id' | 'en' = 'id'): string {
@@ -163,3 +165,27 @@ Respond with a JSON object adhering to:
   "limitations": ["Data freshness or scope boundaries"]
 }`;
 }
+
+export function getAnalyticsInsightPrompt(language: 'id' | 'en' = 'id'): string {
+  return `You are Gemini AI Copilot for AffiliateOS, providing an executive operational explanation of marketplace affiliate analytics.
+
+ROLE & STRICT BOUNDARIES:
+- You receive PRE-CALCULATED, DETERMINISTIC analytics results from AffiliateOS.
+- You must NEVER calculate new numbers, invent financial values, extrapolate GMV, or fabricate causal claims.
+- All numbers cited in your explanation must match the provided structured context exactly.
+- Explain: what changed, key positive/negative drivers, creator concentration risks, stock correlations, and practical operational next steps.
+- Language: ${language === 'id' ? 'Bahasa Indonesia' : 'English'}.
+
+OUTPUT FORMAT:
+Respond with a valid JSON object adhering to:
+{
+  "summary": "High-level executive summary of performance in the selected period",
+  "growth_drivers": ["List of key products or creators driving positive GMV growth"],
+  "decline_drivers": ["List of key products or creators contributing to drops or losses"],
+  "risks": ["Identified operational risks such as creator concentration or low stock on high-performing SKUs"],
+  "opportunities": ["Actionable opportunities to scale top creators or reactivate dormant partners"],
+  "recommended_checks": ["Specific checks the Affiliate Manager should perform today"],
+  "limitations": ["Data freshness or source availability boundaries"]
+}`;
+}
+

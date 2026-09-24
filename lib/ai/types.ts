@@ -5,7 +5,8 @@ export type AIFeature =
   | 'CREATOR_INSIGHT'
   | 'DAILY_BRIEF'
   | 'REPORT_NARRATIVE'
-  | 'ASK_AFFILIATEOS';
+  | 'ASK_AFFILIATEOS'
+  | 'ANALYTICS_INSIGHT';
 
 export type OutreachTone =
   | 'FRIENDLY'

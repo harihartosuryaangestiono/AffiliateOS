@@ -54,3 +54,14 @@ export const AskAffiliateOSSchema = z.object({
   references: z.array(EntityReferenceSchema).default([]),
   limitations: z.array(z.string()).default([]),
 });
+
+// 6. Analytics Performance Insight Schema
+export const AnalyticsInsightSchema = z.object({
+  summary: z.string().min(5, 'Summary must not be empty'),
+  growth_drivers: z.array(z.string()).default([]),
+  decline_drivers: z.array(z.string()).default([]),
+  risks: z.array(z.string()).default([]),
+  opportunities: z.array(z.string()).default([]),
+  recommended_checks: z.array(z.string()).default([]),
+  limitations: z.array(z.string()).default([]),
+});

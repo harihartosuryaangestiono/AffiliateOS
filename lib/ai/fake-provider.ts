@@ -129,6 +129,42 @@ export class FakeAIProvider implements AIProvider {
         break;
       }
 
+      case 'ANALYTICS_INSIGHT': {
+        const marketplace = (context.marketplace as string) || 'Shopee';
+        const gmv = (context.current_gmv as string) || 'Rp 0';
+        const delta = (context.delta_gmv as string) || 'Rp 0';
+        const growth = (context.growth_percentage as string) || '0%';
+        const topDriver = (context.top_growth_driver as string) || 'Top Product';
+
+        resultData = {
+          summary: `${marketplace} affiliate performance recorded ${gmv} (${growth}, ${delta}) during the selected period. Growth was anchored by strong engagement from key creators and top SKU velocity.`,
+          growth_drivers: [
+            `${topDriver} contributed the largest incremental GMV movement.`,
+            'Top performing affiliates sustained conversion velocity across peak promotional hours.',
+          ],
+          decline_drivers: [
+            'Dormant affiliates without recent sample seedings experienced expected order drop-offs.',
+          ],
+          risks: [
+            'Creator concentration: Top 5 creators contribute a significant share of revenue.',
+            'Monitor stock levels for high-velocity SKUs to prevent out-of-stock scenarios.',
+          ],
+          opportunities: [
+            'Reactivate warm creators through personalized outreach with new sample bundles.',
+            'Lock high-performing creator schedules ahead of upcoming Peak Days.',
+          ],
+          recommended_checks: [
+            'Audit SKU stock status in the Stock & HSL workspace.',
+            'Review pending follow-ups in the Outreach queue for top creators.',
+          ],
+          limitations: [
+            'All metrics are computed deterministically from imported marketplace transaction files.',
+            'Cancellation and refund details are subject to BQ-01 business rules confirmation.',
+          ],
+        };
+        break;
+      }
+
       default:
         throw new Error('Unsupported AI feature');
     }

@@ -335,7 +335,7 @@ export function Dashboard() {
           })}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <div className="relative">
             <select
               value={market}
@@ -352,6 +352,39 @@ export function Dashboard() {
             </select>
             <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none" />
           </div>
+
+          {market === 'Shopee' && (
+            <Link
+              href="/shopee"
+              className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-full inline-flex items-center gap-1 transition-all"
+            >
+              View Shopee Analytics <ArrowRight size={12} />
+            </Link>
+          )}
+          {market === 'TikTok' && (
+            <Link
+              href="/tiktok"
+              className="text-xs font-semibold text-[#0F172A] hover:text-black bg-slate-100 hover:bg-slate-200 border border-slate-300 px-3 py-1.5 rounded-full inline-flex items-center gap-1 transition-all"
+            >
+              View TikTok Analytics <ArrowRight size={12} />
+            </Link>
+          )}
+          {market === 'Multi-platform' && (
+            <div className="hidden sm:flex items-center gap-2">
+              <Link
+                href="/shopee"
+                className="text-[11px] font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full inline-flex items-center gap-1 transition-all"
+              >
+                Shopee Analytics →
+              </Link>
+              <Link
+                href="/tiktok"
+                className="text-[11px] font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 px-2.5 py-1 rounded-full inline-flex items-center gap-1 transition-all"
+              >
+                TikTok Analytics →
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
