@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useWorkspace } from '@/components/layout/workspace-provider';
 import { money, number, sum, trend } from '@/lib/data/metrics';
+import { motion } from 'motion/react';
 import { AIDailyBriefCard } from './daily-brief';
 
 export function PlatformIcon({ market }: { market: string }) {
@@ -323,13 +324,20 @@ export function Dashboard() {
                 key={p}
                 type="button"
                 onClick={() => setPeriod(p)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                className={`relative px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150 ${
                   isSelected
-                    ? 'bg-[#0F172A] text-white shadow-xs'
+                    ? 'text-white'
                     : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
                 }`}
               >
-                {p}
+                {isSelected && (
+                  <motion.div
+                    layoutId="dashboard-period-indicator"
+                    className="absolute inset-0 bg-[#0F172A] rounded-full z-0 shadow-xs"
+                    transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">{p}</span>
               </button>
             );
           })}
@@ -391,13 +399,13 @@ export function Dashboard() {
       {/* 3. 5 KPI CARDS ROW */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* KPI 1: Affiliate GMV */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] transition-all flex flex-col justify-between">
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 flex flex-col justify-between cursor-default">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="w-8 h-8 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-[#2563EB] flex items-center justify-center">
                 <TrendingUp size={16} />
               </span>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full transition-transform hover:scale-105">
                 ↑ 12.5%
               </span>
             </div>
@@ -432,7 +440,7 @@ export function Dashboard() {
         </div>
 
         {/* KPI 2: Campaign Target */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] transition-all flex flex-col justify-between">
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 flex flex-col justify-between cursor-default">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center">
@@ -458,7 +466,7 @@ export function Dashboard() {
         </div>
 
         {/* KPI 3: Affiliates with sales */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] transition-all flex flex-col justify-between">
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 flex flex-col justify-between cursor-default">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-200 text-purple-600 flex items-center justify-center">
@@ -487,13 +495,13 @@ export function Dashboard() {
         </div>
 
         {/* KPI 4: Orders */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] transition-all flex flex-col justify-between">
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 flex flex-col justify-between cursor-default">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
                 <ShoppingBag size={16} />
               </span>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full transition-transform hover:scale-105">
                 ↑ 37.5%
               </span>
             </div>
@@ -516,7 +524,7 @@ export function Dashboard() {
         </div>
 
         {/* KPI 5: Active campaigns */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] transition-all flex flex-col justify-between">
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 flex flex-col justify-between cursor-default">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-200 text-teal-600 flex items-center justify-center">

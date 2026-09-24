@@ -28,6 +28,8 @@ import {
   FileText,
   ShieldCheck,
 } from 'lucide-react';
+import { motion } from 'motion/react';
+import { RouteTransition } from '@/components/motion/route-transition';
 import { AskAffiliateOSButton } from '@/components/workflows/ask-affiliateos';
 import {
   SidebarProvider,
@@ -294,19 +296,34 @@ export function AppShell({ children }: { children: ReactNode }) {
                         render={<Link href={'/' + rawUrl} />}
                         isActive={isActive}
                         tooltip={label}
-                        className={`flex items-center justify-between w-full px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                        className={`group relative flex items-center justify-between w-full px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
                           isActive
-                            ? 'bg-[#2563EB] text-white shadow-md hover:bg-[#1D4ED8] active-nav-item'
+                            ? 'text-white shadow-sm active-nav-item'
                             : 'text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
                         }`}
                       >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <Icon size={18} className={isActive ? 'text-white' : 'text-[#64748B]'} />
+                        {isActive && (
+                          <motion.div
+                            layoutId="sidebar-active-indicator"
+                            className="absolute inset-0 bg-[#2563EB] rounded-xl z-0 shadow-sm"
+                            transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                          />
+                        )}
+                        <div className="relative z-10 flex items-center gap-2.5 min-w-0">
+                          <Icon
+                            size={18}
+                            className={`transition-transform duration-150 group-hover:scale-105 ${
+                              isActive ? 'text-white' : 'text-[#64748B]'
+                            }`}
+                          />
                           <span className="truncate">{label}</span>
                         </div>
                         {badgeCount > 0 && (
-                          <span
-                            className={`ml-auto text-[11px] font-bold px-1.5 py-0.2 rounded-full ${
+                          <motion.span
+                            key={badgeCount}
+                            initial={{ scale: 0.85 }}
+                            animate={{ scale: 1 }}
+                            className={`relative z-10 ml-auto text-[11px] font-bold px-1.5 py-0.2 rounded-full ${
                               badgeType === 'actions'
                                 ? isActive
                                   ? 'bg-white/20 text-white'
@@ -317,7 +334,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                             }`}
                           >
                             {badgeCount}
-                          </span>
+                          </motion.span>
                         )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -331,7 +348,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SidebarFooter className="p-3 border-t border-[#E2E8F0]">
           <Link
             href="/settings?tab=Profile"
-            className="profile-button flex items-center justify-between p-2 rounded-xl hover:bg-[#F8FAFD] transition-colors"
+            className="profile-button flex items-center justify-between p-2 rounded-xl hover:bg-[#F8FAFD] transition-colors active:scale-[0.98]"
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="w-8 h-8 rounded-full bg-[#0F172A] text-white font-semibold text-xs flex items-center justify-center shrink-0">
@@ -354,9 +371,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SidebarInset className="workspace-main bg-[#F8FAFC]">
         <header className="topbar h-16 border-b border-[#E2E8F0] bg-white/95 backdrop-blur px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0 max-w-xl">
-            <SidebarTrigger aria-label="Toggle navigation" className="text-[#64748B] hover:text-[#0F172A] shrink-0" />
+            <SidebarTrigger aria-label="Toggle navigation" className="text-[#64748B] hover:text-[#0F172A] shrink-0 active:scale-95 transition-transform" />
             <button
-              className="search-trigger flex items-center gap-2 sm:gap-2.5 w-full max-w-md px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white hover:border-[#CBD5E1] text-[#94A3B8] text-xs transition-all shadow-none group min-w-0"
+              className="search-trigger flex items-center gap-2 sm:gap-2.5 w-full max-w-md px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white hover:border-[#CBD5E1] text-[#94A3B8] text-xs transition-all shadow-none group min-w-0 active:scale-[0.98]"
               onClick={() => setSearch(true)}
             >
               <Search size={15} className="text-[#94A3B8] group-hover:text-[#64748B] shrink-0" />
@@ -389,7 +406,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               href="/actions"
               aria-label="Open Action Center"
-              className="notification relative w-9 h-9 rounded-full border border-[#E2E8F0] bg-white hover:bg-[#F8FAFC] flex items-center justify-center text-[#64748B] hover:text-[#0F172A] transition-colors shadow-2xs"
+              className="notification relative w-9 h-9 rounded-full border border-[#E2E8F0] bg-white hover:bg-[#F8FAFC] flex items-center justify-center text-[#64748B] hover:text-[#0F172A] transition-all active:scale-95 shadow-2xs"
             >
               <Bell size={17} />
               {openActions > 0 && (
@@ -402,7 +419,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuTrigger
                   render={
                     <Button
-                      className="quick-create hidden md:inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-sm"
+                      className="quick-create hidden md:inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-sm active:scale-95 transition-all"
                       aria-label="Quick create"
                     />
                   }
@@ -433,7 +450,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <Link
               href="/settings?tab=Profile"
-              className="topbar-avatar w-8 h-8 rounded-full bg-[#0F172A] text-white font-semibold text-xs flex items-center justify-center hover:opacity-90 transition-opacity"
+              className="topbar-avatar w-8 h-8 rounded-full bg-[#0F172A] text-white font-semibold text-xs flex items-center justify-center hover:opacity-90 active:scale-95 transition-all"
               aria-label={'Profile for ' + name}
             >
               {initials(name || 'Dinda Victoria')}
@@ -447,7 +464,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           className="page-content p-6 max-w-[1600px] mx-auto w-full"
           data-workspace-page={path.split('/')[1]}
         >
-          {children}
+          <RouteTransition pathname={path}>{children}</RouteTransition>
         </main>
 
         <footer className="workspace-footer py-4 px-6 border-t border-[#E2E8F0] bg-white flex flex-wrap items-center justify-between text-xs text-[#94A3B8]">

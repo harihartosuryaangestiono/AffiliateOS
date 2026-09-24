@@ -20,6 +20,7 @@ import {
   BarChart3,
   ShieldAlert
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useWorkspace } from '@/components/layout/workspace-provider';
 import { computeMarketplaceAnalytics } from '@/lib/analytics/engine';
 import type { 
@@ -456,14 +457,23 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`h-9 px-3.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 whitespace-nowrap transition-all ${
+                    className={`relative h-9 px-3.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 whitespace-nowrap transition-colors duration-150 ${
                       isActive
-                        ? 'bg-[#0F172A] text-white shadow-xs'
+                        ? 'text-white'
                         : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white border border-transparent hover:border-[#E2E8F0]'
                     }`}
                   >
-                    <Icon size={14} className={isActive ? 'text-white' : 'text-[#64748B]'} />
-                    {tab.label}
+                    {isActive && (
+                      <motion.div
+                        layoutId="analytics-subnav-indicator"
+                        className="absolute inset-0 bg-[#0F172A] rounded-xl z-0 shadow-xs"
+                        transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Icon size={14} className={isActive ? 'text-white' : 'text-[#64748B]'} />
+                      {tab.label}
+                    </span>
                   </button>
                 );
               })}

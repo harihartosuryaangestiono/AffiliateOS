@@ -118,7 +118,7 @@ export function AskAffiliateOSDrawer({ onClose }: { onClose: () => void }) {
                     key={idx}
                     type="button"
                     onClick={() => handleAsk(s)}
-                    className="w-full text-left p-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white hover:border-[#CBD5E1] text-[#334155] text-xs font-medium transition-all flex items-center justify-between shadow-2xs group"
+                    className="w-full text-left p-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white hover:border-[#CBD5E1] text-[#334155] text-xs font-medium transition-all active:scale-[0.99] flex items-center justify-between shadow-2xs group"
                   >
                     <span>{s}</span>
                     <ArrowRight size={13} className="text-[#94A3B8] group-hover:text-[#2563EB] group-hover:translate-x-0.5 transition-all" />
@@ -129,14 +129,21 @@ export function AskAffiliateOSDrawer({ onClose }: { onClose: () => void }) {
           )}
 
           {loading && (
-            <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 text-[#2563EB] text-xs font-medium flex items-center gap-2.5">
-              <span className="w-2 h-2 rounded-full bg-[#2563EB] animate-ping" />
-              <span>Menghubungkan ke data deterministik workspace...</span>
+            <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 text-[#2563EB] text-xs font-medium space-y-2.5 transition-opacity duration-200">
+              <div className="flex items-center gap-2.5">
+                <Sparkles size={14} className="animate-spin text-[#2563EB]" style={{ animationDuration: '3s' }} />
+                <span className="font-semibold">Synthesizing grounded workspace intelligence...</span>
+              </div>
+              <div className="space-y-1.5 pt-1">
+                <div className="h-2 bg-blue-200/60 rounded-full animate-pulse w-3/4" />
+                <div className="h-2 bg-blue-200/40 rounded-full animate-pulse w-5/6" />
+                <div className="h-2 bg-blue-200/30 rounded-full animate-pulse w-1/2" />
+              </div>
             </div>
           )}
 
           {response && (
-            <div className="space-y-3.5">
+            <div className="space-y-3.5 transition-all duration-200 animate-in fade-in-50 slide-in-from-bottom-2">
               <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
                 <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">Pertanyaan Anda:</span>
                 <p className="text-sm font-semibold text-[#0F172A]">{query}</p>

@@ -46,6 +46,18 @@
   --chart-3: #8b5cf6;
   --chart-4: #f43f5e;
   --chart-5: #f59e0b;
+
+  /* Centralized Motion System Tokens */
+  --motion-instant: 100ms;
+  --motion-fast: 160ms;
+  --motion-standard: 220ms;
+  --motion-emphasis: 280ms;
+  --motion-page: 240ms;
+
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-in: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+  --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
 }
 body {
   background: var(--background);
@@ -90,11 +102,16 @@ a,
 summary,
 [data-slot='button'] {
   transition:
-    background-color 0.18s,
-    color 0.18s,
-    border-color 0.18s,
-    box-shadow 0.18s,
-    transform 0.18s;
+    background-color var(--motion-fast) var(--motion-ease-out),
+    color var(--motion-fast) var(--motion-ease-out),
+    border-color var(--motion-fast) var(--motion-ease-out),
+    box-shadow var(--motion-fast) var(--motion-ease-out),
+    transform var(--motion-fast) var(--motion-ease-out);
+}
+button:active:not(:disabled),
+[data-slot='button']:active:not(:disabled),
+.clickable-card:active {
+  transform: scale(0.98);
 }
 button:not(:disabled),
 select,
@@ -1161,6 +1178,30 @@ select {
   overflow: hidden;
   mask-image: linear-gradient(90deg, transparent, #000 30%);
 }
+@keyframes ribbonDriftOne {
+  0% {
+    transform: rotate(-29deg) translate3d(0, 0, 0);
+  }
+  100% {
+    transform: rotate(-27.5deg) translate3d(6px, -6px, 0);
+  }
+}
+@keyframes ribbonDriftTwo {
+  0% {
+    transform: rotate(65deg) translate3d(0, 0, 0);
+  }
+  100% {
+    transform: rotate(63.5deg) translate3d(-6px, 5px, 0);
+  }
+}
+@keyframes ribbonDriftThree {
+  0% {
+    transform: rotate(27deg) translate3d(0, 0, 0);
+  }
+  100% {
+    transform: rotate(28.5deg) translate3d(4px, 6px, 0);
+  }
+}
 .ribbon {
   position: absolute;
   width: 460px;
@@ -1170,6 +1211,8 @@ select {
   border-radius: 48% 52% 44% 56% / 35% 58% 42% 65%;
   border: 25px solid #aabfff55;
   transform: rotate(-29deg);
+  animation: ribbonDriftOne 16s ease-in-out infinite alternate;
+  will-change: transform;
   background: linear-gradient(
     140deg,
     #ffffff50,
@@ -1187,6 +1230,8 @@ select {
   top: -80px;
   right: 70px;
   transform: rotate(65deg);
+  animation: ribbonDriftTwo 20s ease-in-out infinite alternate;
+  will-change: transform;
   width: 260px;
   height: 410px;
   border-width: 30px;
@@ -1196,6 +1241,8 @@ select {
   top: 160px;
   right: -30px;
   transform: rotate(27deg);
+  animation: ribbonDriftThree 18s ease-in-out infinite alternate;
+  will-change: transform;
   width: 500px;
   height: 210px;
   opacity: 0.5;

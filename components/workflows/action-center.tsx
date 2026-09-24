@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Heading, MetricCards } from './primitives';
 import { toast } from 'sonner';
 import { ArrowUpRight, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 const groups = [
   'Urgent',
   'Today',
@@ -274,9 +275,18 @@ export function ActionCenter({ compact = false }: { compact?: boolean }) {
               <span>{rows.length}</span>
             </div>
             <div className="action-list">
-              {rows.map((a) => (
-                <article className="action-card" key={a.deduplication_key}>
-                  <b className={'priority ' + a.priority}>{a.priority}</b>
+              <AnimatePresence mode="popLayout">
+                {rows.map((a) => (
+                  <motion.article
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    className="action-card"
+                    key={a.deduplication_key}
+                  >
+                    <b className={'priority ' + a.priority}>{a.priority}</b>
                   <div className="action-copy">
                     <div>
                       <span className="market-tag">{a.category}</span>
@@ -411,8 +421,9 @@ export function ActionCenter({ compact = false }: { compact?: boolean }) {
                       </Button>
                     )}
                   </div>
-                </article>
+                </motion.article>
               ))}
+              </AnimatePresence>
             </div>
           </section>
         ) : null;

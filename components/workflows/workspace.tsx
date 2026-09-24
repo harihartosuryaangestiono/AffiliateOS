@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/components/layout/workspace-provider';
 import { EntityForm } from '@/components/operations/entity-form';
 import { Status } from '@/components/operations/shared';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   Heading,
   MetricCards,
@@ -418,36 +419,47 @@ export function MyWork() {
         />
       ) : (
         <section className="panel ops-panel">
-          {rows.map((t) => (
-            <div className="ops-task" key={t.id}>
-              <button
-                disabled={!canEdit('tasks')}
-                aria-label={'Complete ' + t.name}
-                onClick={() =>
-                  save('tasks', { ...t, status: 'Done' }).catch((e) =>
-                    toast.error(e.message),
-                  )
-                }
+          <AnimatePresence mode="popLayout">
+            {rows.map((t) => (
+              <motion.div
+                layout
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="ops-task"
+                key={t.id}
               >
-                <Check size={15} />
-              </button>
-              <div>
-                <b>{t.name}</b>
-                <small>
-                  {t.due_date} · {String(t.owner || 'Unassigned')}
-                </small>
-              </div>
-              <Status value={String(t.priority || 'Medium')} />
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setForm(t)}
-                disabled={!canEdit('tasks')}
-              >
-                Edit
-              </Button>
-            </div>
-          ))}
+                <button
+                  disabled={!canEdit('tasks')}
+                  aria-label={'Complete ' + t.name}
+                  className="transition-transform active:scale-90 hover:scale-105"
+                  onClick={() =>
+                    save('tasks', { ...t, status: 'Done' }).catch((e) =>
+                      toast.error(e.message),
+                    )
+                  }
+                >
+                  <Check size={15} />
+                </button>
+                <div>
+                  <b>{t.name}</b>
+                  <small>
+                    {t.due_date} · {String(t.owner || 'Unassigned')}
+                  </small>
+                </div>
+                <Status value={String(t.priority || 'Medium')} />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setForm(t)}
+                  disabled={!canEdit('tasks')}
+                >
+                  Edit
+                </Button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
           {!rows.length && (
             <div className="ops-empty">
               <h3>No {tab.toLowerCase()} tasks</h3>
