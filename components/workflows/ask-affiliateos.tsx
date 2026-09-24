@@ -26,10 +26,11 @@ export function AskAffiliateOSButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border border-blue-900/60 bg-blue-950/20 text-blue-300 hover:bg-blue-900/30 transition-colors"
+        className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100/80 hover:border-blue-300 transition-all shadow-2xs group shrink-0"
       >
-        <Sparkles size={13} className="text-blue-400" />
-        <span>Ask AffiliateOS</span>
+        <Sparkles size={13} className="text-blue-600 group-hover:rotate-12 transition-transform shrink-0" />
+        <span className="hidden sm:inline">Ask AffiliateOS</span>
+        <span className="sm:hidden">Ask AI</span>
       </button>
 
       {open && <AskAffiliateOSDrawer onClose={() => setOpen(false)} />}
@@ -88,17 +89,20 @@ export function AskAffiliateOSDrawer({ onClose }: { onClose: () => void }) {
 
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="entity-sheet sm:max-w-[500px] flex flex-col h-full">
-        <SheetHeader>
+      <SheetContent className="entity-sheet sm:max-w-[500px] flex flex-col h-full bg-white border-l border-[#E2E8F0] p-6 shadow-xl">
+        <SheetHeader className="pb-4 border-b border-[#E2E8F0]">
           <div className="flex items-center gap-2">
-            <SheetTitle className="flex items-center gap-1.5 text-blue-200">
-              <Sparkles size={15} className="text-blue-400" /> Ask AffiliateOS
+            <SheetTitle className="flex items-center gap-1.5 text-base font-bold text-[#0F172A]">
+              <span className="w-6 h-6 rounded-lg bg-blue-50 border border-blue-200 text-[#2563EB] flex items-center justify-center">
+                <Sparkles size={14} />
+              </span>
+              Ask AffiliateOS
             </SheetTitle>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-900/60 text-blue-300 border border-blue-800">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
               AI Copilot
             </span>
           </div>
-          <SheetDescription>
+          <SheetDescription className="text-xs text-[#64748B] mt-1.5">
             Tanyakan operasional harian, creator follow-up, kampanye, atau Action Center. Data diambil dari konteks deterministik workspace.
           </SheetDescription>
         </SheetHeader>
@@ -107,17 +111,17 @@ export function AskAffiliateOSDrawer({ onClose }: { onClose: () => void }) {
         <div className="flex-1 overflow-y-auto space-y-4 py-4 text-xs">
           {!response && !loading && (
             <div className="space-y-3">
-              <p className="text-slate-400">Pertanyaan umum yang bisa Anda tanyakan:</p>
-              <div className="space-y-1.5">
+              <p className="text-xs font-medium text-[#64748B]">Pertanyaan umum yang bisa Anda tanyakan:</p>
+              <div className="space-y-2">
                 {starters.map((s, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleAsk(s)}
-                    className="w-full text-left p-2.5 rounded-lg border border-slate-800 bg-slate-900/70 hover:bg-slate-800/80 text-slate-200 text-xs transition-colors flex items-center justify-between"
+                    className="w-full text-left p-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white hover:border-[#CBD5E1] text-[#334155] text-xs font-medium transition-all flex items-center justify-between shadow-2xs group"
                   >
                     <span>{s}</span>
-                    <ArrowRight size={12} className="text-slate-500" />
+                    <ArrowRight size={13} className="text-[#94A3B8] group-hover:text-[#2563EB] group-hover:translate-x-0.5 transition-all" />
                   </button>
                 ))}
               </div>
@@ -125,36 +129,37 @@ export function AskAffiliateOSDrawer({ onClose }: { onClose: () => void }) {
           )}
 
           {loading && (
-            <div className="p-4 rounded-lg bg-blue-950/20 border border-blue-900/40 text-blue-200 flex items-center gap-2">
-              <span className="animate-pulse">Menghubungkan ke data deterministik workspace...</span>
+            <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 text-[#2563EB] text-xs font-medium flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-[#2563EB] animate-ping" />
+              <span>Menghubungkan ke data deterministik workspace...</span>
             </div>
           )}
 
           {response && (
-            <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-2">
-                <span className="text-[11px] font-semibold text-blue-400 block">Pertanyaan Anda:</span>
-                <p className="text-slate-200">{query}</p>
+            <div className="space-y-3.5">
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
+                <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">Pertanyaan Anda:</span>
+                <p className="text-sm font-semibold text-[#0F172A]">{query}</p>
               </div>
 
-              <div className="p-3.5 rounded-lg bg-blue-950/20 border border-blue-900/40 space-y-2.5">
+              <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-200 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-blue-300 flex items-center gap-1">
-                    <Sparkles size={12} /> Jawaban AffiliateOS:
+                  <span className="text-xs font-bold text-[#2563EB] flex items-center gap-1.5">
+                    <Sparkles size={13} /> Jawaban AffiliateOS:
                   </span>
                   {response.domain_routed && (
-                    <span className="text-[10px] text-slate-400 font-mono">
+                    <span className="text-[10px] text-[#64748B] font-mono bg-white px-2 py-0.5 rounded-md border border-blue-200/60">
                       Domain: {response.domain_routed}
                     </span>
                   )}
                 </div>
-                <p className="text-slate-100 leading-relaxed text-xs whitespace-pre-wrap">
+                <p className="text-[#334155] leading-relaxed text-xs whitespace-pre-wrap">
                   {response.answer}
                 </p>
 
                 {response.references.length > 0 && (
-                  <div className="pt-2 border-t border-slate-800/80 space-y-1">
-                    <span className="text-[11px] font-medium text-slate-400 block">Referensi Terkait:</span>
+                  <div className="pt-2.5 border-t border-blue-200/70 space-y-1.5">
+                    <span className="text-[11px] font-semibold text-[#64748B] block">Referensi Terkait:</span>
                     <div className="flex flex-wrap gap-1.5">
                       {response.references.map((ref, idx) => (
                         <Link
@@ -166,10 +171,10 @@ export function AskAffiliateOSDrawer({ onClose }: { onClose: () => void }) {
                               ? '/actions'
                               : `/campaigns/${ref.entity_id}`
                           }
-                          className="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-blue-300 border border-slate-700 hover:bg-slate-700 transition-colors inline-flex items-center gap-1"
+                          className="px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-[#2563EB] border border-blue-200 hover:bg-blue-50 transition-colors inline-flex items-center gap-1 shadow-2xs"
                         >
                           <span>{ref.label}</span>
-                          <ArrowRight size={10} />
+                          <ArrowRight size={11} />
                         </Link>
                       ))}
                     </div>
@@ -177,37 +182,37 @@ export function AskAffiliateOSDrawer({ onClose }: { onClose: () => void }) {
                 )}
 
                 {response.limitations.length > 0 && (
-                  <div className="pt-1.5 text-[10px] text-slate-400 italic flex items-center gap-1">
-                    <AlertCircle size={10} className="text-slate-500" />
+                  <div className="pt-1.5 text-[10px] text-[#64748B] italic flex items-center gap-1">
+                    <AlertCircle size={11} className="text-amber-500 shrink-0" />
                     <span>{response.limitations.join(' · ')}</span>
                   </div>
                 )}
               </div>
 
               {/* Feedback */}
-              <div className="flex items-center justify-end gap-2 text-[11px] text-slate-400 pt-1">
+              <div className="flex items-center justify-end gap-2 text-xs text-[#64748B] pt-1">
                 <span>Jawaban ini membantu?</span>
                 <button
                   type="button"
                   onClick={() => handleFeedback('HELPFUL')}
                   disabled={feedback !== null}
-                  className={`p-1 rounded transition-colors ${
-                    feedback === 'HELPFUL' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'
+                  className={`p-1.5 rounded-lg border transition-colors ${
+                    feedback === 'HELPFUL' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'border-transparent hover:bg-slate-100 text-[#64748B]'
                   }`}
                   title="Helpful"
                 >
-                  <ThumbsUp size={12} />
+                  <ThumbsUp size={13} />
                 </button>
                 <button
                   type="button"
                   onClick={() => handleFeedback('NOT_HELPFUL')}
                   disabled={feedback !== null}
-                  className={`p-1 rounded transition-colors ${
-                    feedback === 'NOT_HELPFUL' ? 'text-red-400' : 'text-slate-400 hover:text-slate-200'
+                  className={`p-1.5 rounded-lg border transition-colors ${
+                    feedback === 'NOT_HELPFUL' ? 'bg-rose-50 border-rose-200 text-rose-600' : 'border-transparent hover:bg-slate-100 text-[#64748B]'
                   }`}
                   title="Not Helpful"
                 >
-                  <ThumbsDown size={12} />
+                  <ThumbsDown size={13} />
                 </button>
               </div>
             </div>
@@ -220,16 +225,16 @@ export function AskAffiliateOSDrawer({ onClose }: { onClose: () => void }) {
             e.preventDefault();
             void handleAsk(query);
           }}
-          className="pt-3 border-t border-slate-800 flex items-center gap-2"
+          className="pt-4 border-t border-[#E2E8F0] flex items-center gap-2"
         >
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tanyakan tentang creator, outreach, atau kampanye..."
-            className="text-xs h-9"
+            className="text-xs h-10 rounded-xl border-[#E2E8F0] focus-visible:ring-[#2563EB]"
           />
-          <Button type="submit" size="sm" disabled={loading || !query.trim()} className="h-9 px-3">
-            <Send size={13} />
+          <Button type="submit" size="sm" disabled={loading || !query.trim()} className="h-10 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white">
+            <Send size={14} />
           </Button>
         </form>
       </SheetContent>

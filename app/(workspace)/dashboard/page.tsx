@@ -1,4 +1,4 @@
-import { CommandCenter } from '@/components/dashboard/command-center';
+import { Dashboard } from '@/components/dashboard/dashboard';
 export default function Page() {
-  return <CommandCenter />;
+  return <Dashboard />;
 }

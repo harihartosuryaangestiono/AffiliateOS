@@ -79,14 +79,17 @@ export function AIDailyBriefCard() {
   }
 
   return (
-    <div className="panel my-4 border-blue-900/30 bg-blue-950/10 p-4 rounded-xl">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold flex items-center gap-1.5 text-blue-200">
-            <Sparkles size={13} className="text-blue-400" /> Operational Daily Brief
+    <div className="my-5 border border-blue-200/80 bg-gradient-to-r from-blue-50/60 to-indigo-50/40 p-5 rounded-2xl shadow-xs">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <span className="w-6 h-6 rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] text-[#2563EB] flex items-center justify-center">
+            <Sparkles size={13} />
           </span>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-900/60 text-blue-300 border border-blue-800">
-            AI Summary
+          <span className="text-xs font-bold text-[#0F172A]">
+            Operational Daily Brief
+          </span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white text-[#2563EB] border border-blue-200 shadow-2xs">
+            AI Operational Brief
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -95,35 +98,36 @@ export function AIDailyBriefCard() {
             variant="ghost"
             onClick={loadBrief}
             disabled={loading}
-            className="h-6 px-2 text-[11px] text-slate-400 hover:text-slate-200"
+            className="h-7 px-2.5 text-xs text-[#64748B] hover:text-[#0F172A] hover:bg-white/80 rounded-lg"
           >
-            <RefreshCw size={11} className={`mr-1 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw size={12} className={`mr-1.5 ${loading ? 'animate-spin text-[#2563EB]' : ''}`} />
             {loading ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
       </div>
 
       {loading && !brief ? (
-        <div className="text-xs text-muted-foreground py-2 flex items-center gap-2">
-          <span className="animate-pulse">Analyzing Action Center, outreach schedules, and H-2 data coverage...</span>
+        <div className="text-xs text-[#64748B] py-3 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#2563EB] animate-ping" />
+          <span>Analyzing Action Center, outreach schedules, and H-2 data coverage...</span>
         </div>
       ) : brief ? (
-        <div className="space-y-3 text-xs">
+        <div className="space-y-3.5 text-xs">
           <div>
-            <h4 className="font-semibold text-slate-100 text-xs">{brief.headline}</h4>
-            <p className="text-slate-300 text-xs mt-0.5 leading-relaxed">{brief.summary}</p>
+            <h4 className="font-bold text-[#0F172A] text-sm">{brief.headline}</h4>
+            <p className="text-[#475569] text-xs mt-1 leading-relaxed">{brief.summary}</p>
           </div>
 
           {brief.priorities.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
               {brief.priorities.slice(0, 2).map((p, idx) => (
                 <div
                   key={idx}
-                  className="p-2 rounded bg-slate-900/80 border border-slate-800 flex items-start justify-between gap-2"
+                  className="p-3 rounded-xl bg-white border border-[#E2E8F0] flex items-start justify-between gap-3 shadow-2xs hover:border-[#CBD5E1] transition-all"
                 >
-                  <div className="space-y-0.5">
-                    <span className="font-medium text-slate-200 text-[11px] block">{p.title}</span>
-                    <span className="text-slate-400 text-[11px] block">{p.reason}</span>
+                  <div className="space-y-1">
+                    <span className="font-semibold text-[#0F172A] text-xs block">{p.title}</span>
+                    <span className="text-[#64748B] text-xs block leading-relaxed">{p.reason}</span>
                   </div>
                   <Link
                     href={
@@ -131,7 +135,7 @@ export function AIDailyBriefCard() {
                         ? `/creators/communication?creator_id=${p.related_entity_id}`
                         : '/actions'
                     }
-                    className="text-blue-400 hover:text-blue-300 text-[11px] shrink-0 font-medium inline-flex items-center gap-0.5"
+                    className="text-[#2563EB] hover:text-[#1D4ED8] text-xs shrink-0 font-semibold inline-flex items-center gap-1 bg-[#EFF6FF] px-2 py-1 rounded-lg transition-colors"
                   >
                     Action <ArrowRight size={11} />
                   </Link>
@@ -140,34 +144,34 @@ export function AIDailyBriefCard() {
             </div>
           )}
 
-          <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/60">
-            <span className="italic flex items-center gap-1">
-              <AlertCircle size={11} className="text-slate-500" />
+          <div className="flex items-center justify-between text-xs text-[#64748B] pt-2 border-t border-blue-200/60">
+            <span className="italic flex items-center gap-1.5 text-[11px]">
+              <AlertCircle size={12} className="text-amber-500" />
               {brief.data_limitations[0] || 'Cakupan data Shopee & TikTok siap hingga H-2'}
             </span>
-            <div className="flex items-center gap-1">
-              <span className="text-[10px]">Helpful?</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px]">Helpful?</span>
               <button
                 type="button"
                 onClick={() => handleFeedback('HELPFUL')}
                 disabled={feedback !== null}
                 className={`p-1 rounded transition-colors ${
-                  feedback === 'HELPFUL' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'
+                  feedback === 'HELPFUL' ? 'text-emerald-600 bg-emerald-50' : 'text-[#94A3B8] hover:text-[#0F172A]'
                 }`}
                 title="Helpful"
               >
-                <ThumbsUp size={11} />
+                <ThumbsUp size={12} />
               </button>
               <button
                 type="button"
                 onClick={() => handleFeedback('NOT_HELPFUL')}
                 disabled={feedback !== null}
                 className={`p-1 rounded transition-colors ${
-                  feedback === 'NOT_HELPFUL' ? 'text-red-400' : 'text-slate-400 hover:text-slate-200'
+                  feedback === 'NOT_HELPFUL' ? 'text-rose-600 bg-rose-50' : 'text-[#94A3B8] hover:text-[#0F172A]'
                 }`}
                 title="Not Helpful"
               >
-                <ThumbsDown size={11} />
+                <ThumbsDown size={12} />
               </button>
             </div>
           </div>

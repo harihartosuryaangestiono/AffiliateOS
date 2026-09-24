@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
 import {
   ArrowRight,
   LoaderCircle,
@@ -87,20 +86,18 @@ export function LoginForm({ configured }: { configured: boolean }) {
             )}
           </Button>
         </form>
-        {!configured && (
-          <>
-            <div className="info-notice">
-              This deployment is a demo. Live sign-in is available after the
-              Supabase project is configured.
-            </div>
-            <Link
-              className="button-outline justify-center w-full"
-              href="/dashboard"
-            >
-              Explore demo workspace <ArrowRight size={14} />
-            </Link>
-          </>
-        )}
+        <div className="pt-2">
+          <button
+            type="button"
+            className="button-outline justify-center w-full"
+            onClick={() => {
+              document.cookie = 'affiliateos-mode=demo; path=/; max-age=86400';
+              window.location.assign('/dashboard');
+            }}
+          >
+            Explore demo workspace <ArrowRight size={14} />
+          </button>
+        </div>
         <p className="login-help">
           Need access? Contact your workspace administrator.
         </p>

@@ -2,11 +2,14 @@ import { operationTables } from '@/lib/operations/config';
 import { seed } from '@/lib/data/seed';
 import { configured, identity, workspaceMode } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { entities, type WorkspaceData, type Role } from '@/types/domain';
 export async function loadWorkspace() {
-  if (workspaceMode()==='production'&&!configured())
+  const jar = await cookies();
+  const demoCookie = jar.get('affiliateos-mode')?.value === 'demo';
+  if (workspaceMode()==='production'&&!configured()&&!demoCookie)
     throw Error('Production mode requires a Supabase URL and publishable key. AffiliateOS will not fall back to demo data.');
-  if (workspaceMode()==='demo')
+  if (workspaceMode()==='demo'||demoCookie)
     return {
       initialData: seed,
       demo: true,

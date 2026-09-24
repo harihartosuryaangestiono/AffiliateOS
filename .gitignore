@@ -40,3 +40,5 @@ next-env.d.ts
 !.env.example
 *.tsbuildinfo
 /.next-standard/
+storage-state.json
+*.png
