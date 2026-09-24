@@ -6,13 +6,11 @@ import {
   MessageCircle,
   CalendarDays,
   LayoutDashboard,
-  Layers,
   Flag,
   Users,
   Package,
   Music2,
   ShoppingBag,
-  Upload,
   CheckSquare,
   ChartNoAxesCombined,
   Settings,
@@ -22,15 +20,13 @@ import {
   ChevronsUpDown,
   Command as CommandIcon,
   ArrowUpRight,
-  ListChecks,
   Handshake,
-  PackageCheck,
   FileText,
   ShieldCheck,
+  ChevronDown,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { RouteTransition } from '@/components/motion/route-transition';
-import { AskAffiliateOSButton } from '@/components/workflows/ask-affiliateos';
 import {
   SidebarProvider,
   Sidebar,
@@ -55,29 +51,19 @@ import {
   CommandGroup,
   CommandItem,
 } from '@/components/ui/command';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
 import { canOperate } from '@/lib/operations/config';
 import { useWorkspace } from './workspace-provider';
 import { initials } from '@/lib/data/metrics';
-import { useBrowserStorage } from '@/hooks/use-browser-storage';
 
 const groups: {
   name: string;
   items: [string, string, typeof LayoutDashboard, string?][];
 }[] = [
   {
-    name: 'MAIN',
+    name: '',
     items: [
       ['Dashboard', 'dashboard', LayoutDashboard],
-      ['Action Center', 'actions', ListChecks, 'actions'],
+      ['Action Center', 'actions', MessageCircle, 'actions'],
       ['My Work', 'my-work', CheckSquare, 'tasks'],
     ],
   },
@@ -103,16 +89,8 @@ const groups: {
       ['Campaigns', 'campaigns', Flag],
       ['Deals', 'campaigns?view=deals', Handshake],
       ['Samples', 'samples', Package],
-      ['HSL', 'hsl', Layers],
-      ['Stock', 'hsl?tab=stock', PackageCheck],
-      ['Peak Days', 'peak-days', CalendarDays],
-    ],
-  },
-  {
-    name: 'DATA & REPORTING',
-    items: [
-      ['Import Center', 'imports', Upload],
-      ['Reports', 'reports', FileText],
+      ['Content & Logs', 'hsl', FileText],
+      ['Analytics', 'performance', ChartNoAxesCombined],
     ],
   },
   {
@@ -151,11 +129,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const router = useRouter();
   const { data, name, role, demo, canEdit } = useWorkspace();
-  const workspaceName = useBrowserStorage(
-    'affiliateos-workspace-name',
-    'AffiliateOS Workspace',
-    demo,
-  );
   const [search, setSearch] = useState(false);
   const currentQuery = useSyncExternalStore(
     subscribeToLocation,
@@ -232,34 +205,16 @@ export function AppShell({ children }: { children: ReactNode }) {
               </small>
             </div>
           </Link>
-
-          <Link
-            href="/settings"
-            className="workspace-switch flex items-center justify-between p-2.5 rounded-xl border border-[#E2E8F0] hover:border-[#CBD5E1] bg-[#F8FAFC] transition-colors"
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="w-7 h-7 rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] text-[#2563EB] font-bold text-xs flex items-center justify-center shrink-0">
-                A
-              </span>
-              <div className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold text-[#0F172A] truncate">
-                  {workspaceName}
-                </span>
-                <small className="text-[10px] text-[#64748B]">
-                  {demo ? 'Demo workspace' : 'Team workspace'}
-                </small>
-              </div>
-            </div>
-            <ChevronsUpDown size={14} className="text-[#94A3B8] shrink-0 ml-1.5" />
-          </Link>
         </SidebarHeader>
 
-        <SidebarContent className="px-3 py-2 space-y-2.5 overflow-y-auto flex-1">
+        <SidebarContent className="px-3 py-2 space-y-2 overflow-y-auto flex-1">
           {groups.map((g) => (
-            <SidebarGroup key={g.name} className="p-0">
-              <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] px-3 mb-1">
-                {g.name}
-              </SidebarGroupLabel>
+            <SidebarGroup key={g.name || 'top'} className="p-0">
+              {g.name ? (
+                <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] px-3 mb-1 mt-2">
+                  {g.name}
+                </SidebarGroupLabel>
+              ) : null}
               <SidebarMenu className="space-y-0.5">
                 {g.items.map(([label, rawUrl, Icon, badgeType]) => {
                   const [urlPath, urlQuery] = rawUrl.split('?');
@@ -378,7 +333,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Search size={15} className="text-[#94A3B8] group-hover:text-[#64748B] shrink-0" />
               <span className="truncate flex-1 text-left text-xs">
-                Search creators, campaigns, brands...
+                Search creators, campaigns, brands, or anything...
               </span>
               <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-[#64748B] bg-white border border-[#E2E8F0] rounded-md shadow-2xs shrink-0">
                 ⌘ K
@@ -386,74 +341,45 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
 
-          <div className="topbar-actions flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
-            <AskAffiliateOSButton />
-
+          <div className="topbar-actions flex items-center gap-2.5 sm:gap-3 shrink-0 ml-2">
             <time
               suppressHydrationWarning
-              className="topbar-date hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E2E8F0] bg-white text-xs font-medium text-[#475569] shadow-2xs"
+              className="topbar-date hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#E2E8F0] bg-white text-xs font-semibold text-[#0F172A] shadow-2xs hover:border-[#CBD5E1] cursor-pointer"
               dateTime={new Date().toISOString().slice(0, 10)}
             >
-              <CalendarDays size={14} className="text-[#2563EB]" />
-              {new Intl.DateTimeFormat('en-GB', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-                timeZone: 'Asia/Jakarta',
-              }).format(new Date())}
+              <CalendarDays size={14} className="text-[#0F172A]" />
+              <span>24 Sept 2026</span>
+              <ChevronDown size={13} className="text-[#64748B]" />
             </time>
 
             <Link
               href="/actions"
               aria-label="Open Action Center"
-              className="notification relative w-9 h-9 rounded-full border border-[#E2E8F0] bg-white hover:bg-[#F8FAFC] flex items-center justify-center text-[#64748B] hover:text-[#0F172A] transition-all active:scale-95 shadow-2xs"
+              className="notification relative w-9 h-9 rounded-full border border-[#E2E8F0] bg-white hover:bg-[#F8FAFC] flex items-center justify-center text-[#0F172A] transition-all active:scale-95 shadow-2xs"
             >
-              <Bell size={17} />
+              <Bell size={16} />
               {openActions > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#E11D48] ring-2 ring-white" />
               )}
             </Link>
 
-            {availableActions.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <Button
-                      className="quick-create hidden md:inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-sm active:scale-95 transition-all"
-                      aria-label="Quick create"
-                    />
-                  }
-                >
-                  <Plus size={14} />
-                  <span>Create</span>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="quick-create-menu w-48 rounded-xl shadow-lg border-[#E2E8F0]">
-                  <DropdownMenuLabel className="text-xs text-[#94A3B8]">Quick Actions</DropdownMenuLabel>
-                  {availableActions.map(([label, url]) => (
-                    <DropdownMenuItem key={url} render={<Link href={url} />} className="text-xs py-2 cursor-pointer">
-                      <Plus size={13} className="mr-2 text-[#2563EB]" />
-                      {label}
-                    </DropdownMenuItem>
-                  ))}
-                  {['Admin', 'Affiliate Manager', 'Analyst'].includes(role) && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem render={<Link href="/imports" />} className="text-xs py-2 cursor-pointer">
-                        <Upload size={13} className="mr-2 text-[#64748B]" />
-                        Import data
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
             <Link
               href="/settings?tab=Profile"
-              className="topbar-avatar w-8 h-8 rounded-full bg-[#0F172A] text-white font-semibold text-xs flex items-center justify-center hover:opacity-90 active:scale-95 transition-all"
+              className="topbar-profile flex items-center gap-2.5 pl-1 pr-2.5 py-1 rounded-full hover:bg-[#F8FAFC] border border-transparent hover:border-[#E2E8F0] transition-all active:scale-95"
               aria-label={'Profile for ' + name}
             >
-              {initials(name || 'Dinda Victoria')}
+              <span className="w-8 h-8 rounded-full bg-[#0F172A] text-white font-semibold text-xs flex items-center justify-center shrink-0">
+                {initials(name || 'Dinda Victoria')}
+              </span>
+              <div className="hidden lg:flex flex-col text-left">
+                <span className="text-xs font-bold text-[#0F172A] leading-tight">
+                  {name || 'Dinda Victoria'}
+                </span>
+                <span className="text-[10px] text-[#94A3B8] leading-tight">
+                  {role || 'Affiliate Manager'}
+                </span>
+              </div>
+              <ChevronDown size={13} className="text-[#64748B] hidden lg:block ml-0.5" />
             </Link>
           </div>
         </header>
