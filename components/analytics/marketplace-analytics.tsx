@@ -447,7 +447,7 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
           />
 
           {/* 5. STICKY SUB-NAVIGATION TABS */}
-          <div className="sticky top-0 z-20 bg-[#F8FAFC]/90 backdrop-blur-md pt-2 pb-1 border-b border-[#E2E8F0]">
+          <div className="sticky top-16 z-20 bg-[#F8FAFC]/95 backdrop-blur-md pt-2 pb-1 border-b border-[#E2E8F0]">
             <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -457,7 +457,7 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`relative h-9 px-3.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 whitespace-nowrap transition-colors duration-150 ${
+                    className={`relative h-9 px-3.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 whitespace-nowrap transition-all duration-150 active:scale-95 ${
                       isActive
                         ? 'text-white'
                         : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white border border-transparent hover:border-[#E2E8F0]'

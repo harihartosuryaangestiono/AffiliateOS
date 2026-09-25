@@ -260,18 +260,20 @@ export function AppShell({ children }: { children: ReactNode }) {
                         {isActive && (
                           <motion.div
                             layoutId="sidebar-active-indicator"
-                            className="absolute inset-0 bg-[#2563EB] rounded-xl z-0 shadow-sm"
-                            transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                            className="absolute inset-0 bg-[#2563EB] rounded-xl z-0 shadow-[0_2px_12px_-1px_rgba(37,99,235,0.32)]"
+                            transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.85 }}
                           />
                         )}
                         <div className="relative z-10 flex items-center gap-2.5 min-w-0">
                           <Icon
                             size={18}
-                            className={`transition-transform duration-150 group-hover:scale-105 ${
-                              isActive ? 'text-white' : 'text-[#64748B]'
+                            className={`transition-all duration-150 group-hover:scale-105 ${
+                              isActive ? 'text-white' : 'text-[#64748B] group-hover:text-[#0F172A]'
                             }`}
                           />
-                          <span className="truncate">{label}</span>
+                          <span className={`truncate transition-transform duration-150 ${!isActive ? 'group-hover:translate-x-0.5' : ''}`}>
+                            {label}
+                          </span>
                         </div>
                         {badgeCount > 0 && (
                           <motion.span
@@ -344,7 +346,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="topbar-actions flex items-center gap-2.5 sm:gap-3 shrink-0 ml-2">
             <time
               suppressHydrationWarning
-              className="topbar-date hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#E2E8F0] bg-white text-xs font-semibold text-[#0F172A] shadow-2xs hover:border-[#CBD5E1] cursor-pointer"
+              className="topbar-date hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#E2E8F0] bg-white text-xs font-semibold text-[#0F172A] shadow-2xs hover:border-[#CBD5E1] cursor-pointer transition-all active:scale-95"
               dateTime={new Date().toISOString().slice(0, 10)}
             >
               <CalendarDays size={14} className="text-[#0F172A]" />

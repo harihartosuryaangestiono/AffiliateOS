@@ -502,7 +502,20 @@ function IndividualPreparationDrawer({
                   </Button>
                 </div>
               </div>
-              {aiReasoning && (
+              {aiLoading && (
+                <div className="mt-3 p-3 rounded-lg bg-blue-950/40 border border-blue-500/30 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-blue-300">
+                    <Sparkles size={13} className="text-blue-400 animate-pulse" />
+                    <span>Gemini 2.5 is tailoring contextual outreach draft...</span>
+                  </div>
+                  <div className="space-y-1.5 pt-1">
+                    <div className="h-2 bg-blue-400/20 rounded w-full animate-pulse" />
+                    <div className="h-2 bg-blue-400/20 rounded w-4/5 animate-pulse" />
+                    <div className="h-2 bg-blue-400/20 rounded w-3/5 animate-pulse" />
+                  </div>
+                </div>
+              )}
+              {!aiLoading && aiReasoning && (
                 <p className="text-[11px] text-blue-300/80 italic mt-1">
                   💡 {aiReasoning}
                 </p>

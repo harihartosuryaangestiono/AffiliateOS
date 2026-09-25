@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import {
   AreaChart,
   Area,
@@ -34,7 +34,8 @@ import {
 } from 'lucide-react';
 import { useWorkspace } from '@/components/layout/workspace-provider';
 import { money, sum, trend } from '@/lib/data/metrics';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import { usePrefersReducedMotion } from '@/lib/motion/reduced-motion';
 
 export function PlatformIcon({ market }: { market: string }) {
   if (market === 'TikTok') {
@@ -131,9 +132,41 @@ const defaultDemoCampaigns = [
 
 export function Dashboard() {
   const { data, name, demo } = useWorkspace();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [period, setPeriod] = useState<'Today' | '7D' | '30D' | 'MTD' | 'QTD' | 'YTD'>('MTD');
   const [market, setMarket] = useState<'Multi-platform' | 'TikTok' | 'Shopee'>('Multi-platform');
   const [granularity, setGranularity] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
+
+  // Hero interactive parallax and lighting state
+  const heroRef = useRef<HTMLElement>(null);
+  const [heroOffset, setHeroOffset] = useState({ x: 0, y: 0 });
+  const [heroPointerPos, setHeroPointerPos] = useState({ x: 50, y: 50 });
+  const [isHeroHovered, setIsHeroHovered] = useState(false);
+
+  const handleHeroMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLElement>) => {
+      if (prefersReducedMotion) return;
+      if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const normX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const normY = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+      const pctX = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+      const pctY = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+
+      setHeroOffset({
+        x: Math.max(-1, Math.min(1, normX)),
+        y: Math.max(-1, Math.min(1, normY)),
+      });
+      setHeroPointerPos({ x: pctX, y: pctY });
+      setIsHeroHovered(true);
+    },
+    [prefersReducedMotion],
+  );
+
+  const handleHeroMouseLeave = useCallback(() => {
+    setHeroOffset({ x: 0, y: 0 });
+    setIsHeroHovered(false);
+  }, []);
 
   // Time calculations based on Asia/Jakarta
   const now = new Date();
@@ -325,11 +358,35 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* 1. HERO BANNER */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#F4F8FF] to-[#E9F1FE] border border-[#CCE0FF] p-6 sm:p-8 shadow-xs">
-        {/* Abstract 3D Glassmorphic Ribbon Artwork (Iridescent cyan, violet, lilac with translucent highlights) */}
+      {/* 1. HERO BANNER WITH MICRO-PARALLAX & AMBIENT LIGHT RESPONSE */}
+      <section
+        ref={heroRef}
+        onMouseMove={handleHeroMouseMove}
+        onMouseLeave={handleHeroMouseLeave}
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#F4F8FF] to-[#E9F1FE] border border-[#CCE0FF] p-6 sm:p-8 shadow-[0_4px_20px_-4px_rgba(37,99,235,0.06)] transition-shadow duration-300"
+      >
+        {/* Subtle Ambient Cursor Light Response Overlay (Desktop, Non-Reduced Motion) */}
+        {!prefersReducedMotion && (
+          <div
+            className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-300"
+            style={{
+              opacity: isHeroHovered ? 0.35 : 0,
+              background: `radial-gradient(circle 380px at ${heroPointerPos.x}% ${heroPointerPos.y}%, rgba(255,255,255,0.7) 0%, transparent 70%)`,
+            }}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Abstract 3D Glassmorphic Ribbon Artwork with Layered Micro-Parallax */}
         <div
-          className="absolute right-0 top-0 bottom-0 w-full sm:w-7/12 pointer-events-none overflow-hidden"
+          className="absolute right-0 top-0 bottom-0 w-full sm:w-7/12 pointer-events-none overflow-hidden transition-transform duration-200 ease-out"
+          style={
+            prefersReducedMotion
+              ? undefined
+              : {
+                  transform: `translate3d(${-heroOffset.x * 3.5}px, ${-heroOffset.y * 3.5}px, 0)`,
+                }
+          }
           aria-hidden="true"
         >
           <svg
@@ -469,17 +526,18 @@ export function Dashboard() {
                 place.
               </p>
 
+              {/* Tactile Primary and Secondary CTAs */}
               <div className="flex flex-wrap items-center gap-3 pt-3">
                 <Link
                   href="/campaigns?create=1"
-                  className="h-9 px-4 rounded-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold shadow-xs inline-flex items-center gap-2 transition-all active:scale-98"
+                  className="h-9 px-4 rounded-full bg-[#2563EB] hover:bg-[#1D4ED8] hover:-translate-y-0.5 hover:shadow-md text-white text-xs font-semibold shadow-xs inline-flex items-center gap-2 transition-all active:scale-[0.985]"
                 >
                   <span className="text-sm font-bold leading-none">+</span>
                   <span>Create campaign</span>
                 </Link>
                 <Link
                   href="/creators"
-                  className="h-9 px-4 rounded-full bg-white hover:bg-[#F8FAFC] text-[#0F172A] border border-[#CBD5E1] text-xs font-semibold shadow-2xs inline-flex items-center gap-2 transition-all active:scale-98"
+                  className="h-9 px-4 rounded-full bg-white hover:bg-[#F8FAFC] hover:-translate-y-0.5 hover:shadow-xs text-[#0F172A] border border-[#CBD5E1] text-xs font-semibold shadow-2xs inline-flex items-center gap-2 transition-all active:scale-[0.985]"
                 >
                   <Users size={14} className="text-[#64748B]" />
                   <span>Browse creators</span>
@@ -487,14 +545,22 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* Floating Creator Economy Card */}
-            <div className="shrink-0 max-w-sm lg:pt-2">
-              <div className="bg-white/85 backdrop-blur-md border border-white/90 rounded-2xl p-3 px-4 shadow-[0_8px_24px_-4px_rgba(37,99,235,0.12)] flex items-center justify-between gap-5">
+            {/* Floating Creator Economy Card with Micro-Parallax */}
+            <div
+              className="shrink-0 max-w-sm lg:pt-2 transition-transform duration-200 ease-out"
+              style={
+                prefersReducedMotion
+                  ? undefined
+                  : {
+                      transform: `translate3d(${-heroOffset.x * 5.5}px, ${-heroOffset.y * 5.5}px, 0)`,
+                    }
+              }
+            >
+              <div className="group bg-white/90 backdrop-blur-md border border-white/95 rounded-2xl p-3 px-4 shadow-[0_12px_28px_-4px_rgba(37,99,235,0.12)] hover:shadow-[0_16px_36px_-4px_rgba(37,99,235,0.18)] hover:-translate-y-1 flex items-center justify-between gap-5 transition-all duration-200 cursor-pointer">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="flex -space-x-2 shrink-0 items-center">
                     {/* Portrait 1 */}
-                    <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden shadow-xs shrink-0">
-                      {/* Realistic styled avatar */}
+                    <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden shadow-xs shrink-0 transition-transform group-hover:scale-105">
                       <svg viewBox="0 0 32 32" className="w-full h-full">
                         <circle cx="16" cy="16" r="16" fill="#FDE68A" />
                         <circle cx="16" cy="12" r="6" fill="#92400E" />
@@ -502,7 +568,7 @@ export function Dashboard() {
                       </svg>
                     </div>
                     {/* Portrait 2 */}
-                    <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden shadow-xs shrink-0">
+                    <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden shadow-xs shrink-0 transition-transform group-hover:scale-105">
                       <svg viewBox="0 0 32 32" className="w-full h-full">
                         <circle cx="16" cy="16" r="16" fill="#BAE6FD" />
                         <circle cx="16" cy="12" r="6" fill="#0369A1" />
@@ -510,7 +576,7 @@ export function Dashboard() {
                       </svg>
                     </div>
                     {/* Portrait 3 */}
-                    <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden shadow-xs shrink-0">
+                    <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden shadow-xs shrink-0 transition-transform group-hover:scale-105">
                       <svg viewBox="0 0 32 32" className="w-full h-full">
                         <circle cx="16" cy="16" r="16" fill="#FBCFE8" />
                         <circle cx="16" cy="12" r="6" fill="#BE185D" />
@@ -532,7 +598,7 @@ export function Dashboard() {
                 <Link
                   href="/creators"
                   aria-label="View creators"
-                  className="w-8 h-8 rounded-full bg-[#2563EB] text-white flex items-center justify-center hover:bg-[#1D4ED8] transition-colors shrink-0 shadow-xs"
+                  className="w-8 h-8 rounded-full bg-[#2563EB] text-white flex items-center justify-center group-hover:bg-[#1D4ED8] group-hover:scale-105 transition-all shrink-0 shadow-xs active:scale-95"
                 >
                   <ArrowRight size={14} />
                 </Link>
@@ -543,7 +609,7 @@ export function Dashboard() {
           {/* Bottom Row inside Hero: 3 Mini Value-Prop Badges */}
           <div className="flex flex-wrap items-center justify-end gap-6 pt-6 sm:pt-4">
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-white/70 border border-white text-[#2563EB] flex items-center justify-center shadow-2xs">
+              <span className="w-7 h-7 rounded-lg bg-white/80 border border-white text-[#2563EB] flex items-center justify-center shadow-2xs">
                 <Sparkle size={14} />
               </span>
               <div>
@@ -555,7 +621,7 @@ export function Dashboard() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-white/70 border border-white text-[#2563EB] flex items-center justify-center shadow-2xs">
+              <span className="w-7 h-7 rounded-lg bg-white/80 border border-white text-[#2563EB] flex items-center justify-center shadow-2xs">
                 <SlidersHorizontal size={14} />
               </span>
               <div>
@@ -567,7 +633,7 @@ export function Dashboard() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-white/70 border border-white text-[#2563EB] flex items-center justify-center shadow-2xs">
+              <span className="w-7 h-7 rounded-lg bg-white/80 border border-white text-[#2563EB] flex items-center justify-center shadow-2xs">
                 <TrendingUp size={14} />
               </span>
               <div>
@@ -581,7 +647,7 @@ export function Dashboard() {
         </div>
       </section>
 
-      {/* 2. PERIOD SELECTOR & MARKETPLACE FILTER (Directly beneath hero) */}
+      {/* 2. SEGMENTED CONTROL & MARKETPLACE FILTER */}
       <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
         <div className="flex items-center gap-1.5 p-1 bg-white border border-[#E2E8F0] rounded-full shadow-2xs">
           {(['Today', '7D', '30D', 'MTD', 'QTD', 'YTD'] as const).map((p) => {
@@ -591,7 +657,7 @@ export function Dashboard() {
                 key={p}
                 type="button"
                 onClick={() => setPeriod(p)}
-                className={`relative px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150 ${
+                className={`relative px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 active:scale-95 ${
                   isSelected
                     ? 'text-white'
                     : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
@@ -601,7 +667,7 @@ export function Dashboard() {
                   <motion.div
                     layoutId="dashboard-period-indicator"
                     className="absolute inset-0 bg-[#0F172A] rounded-full z-0 shadow-xs"
-                    transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                    transition={{ type: 'spring', stiffness: 480, damping: 36, mass: 0.8 }}
                   />
                 )}
                 <span className="relative z-10">{p}</span>
@@ -618,7 +684,7 @@ export function Dashboard() {
                 setMarket(e.target.value as 'Multi-platform' | 'TikTok' | 'Shopee')
               }
               aria-label="Filter by marketplace"
-              className="appearance-none bg-white border border-[#E2E8F0] rounded-full px-4 py-1.5 pr-8 text-xs font-semibold text-[#0F172A] shadow-2xs cursor-pointer hover:border-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20"
+              className="appearance-none bg-white border border-[#E2E8F0] rounded-full px-4 py-1.5 pr-8 text-xs font-semibold text-[#0F172A] shadow-2xs cursor-pointer hover:border-[#CBD5E1] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 transition-all active:scale-98"
             >
               <option value="Multi-platform">Multi-platform</option>
               <option value="TikTok">TikTok Shop</option>
@@ -632,22 +698,33 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* 3. 5 KPI CARDS ROW */}
+      {/* 3. 5 KPI CARDS ROW WITH REFINED VISUAL HIERARCHY & MASKED NUMBER TRANSITIONS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* KPI 1: Affiliate GMV */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 flex flex-col justify-between cursor-default">
+        {/* KPI 1: Affiliate GMV (PRIMARY HERO METRIC) */}
+        <div className="bg-gradient-to-b from-white via-white to-[#F8FAFF] rounded-2xl border border-[#BFDBFE] p-4 shadow-[0_4px_16px_-2px_rgba(37,99,235,0.08)] ring-1 ring-[#2563EB]/10 hover:border-[#93C5FD] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 flex flex-col justify-between cursor-default">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="w-8 h-8 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-[#2563EB] flex items-center justify-center">
+              <span className="w-8 h-8 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-[#2563EB] flex items-center justify-center shadow-xs">
                 <TrendingUp size={16} />
               </span>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-2xs">
                 ↑ 12.5%
               </span>
             </div>
-            <div className="text-xs font-medium text-[#64748B]">Affiliate GMV</div>
-            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
-              {displayGMV}
+            <div className="text-xs font-semibold text-[#475569]">Affiliate GMV</div>
+            <div className="text-2xl font-black text-[#0F172A] tracking-tight overflow-hidden">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={`${period}-${displayGMV}`}
+                  initial={{ y: 7, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -7, opacity: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="inline-block"
+                >
+                  {displayGMV}
+                </motion.span>
+              </AnimatePresence>
             </div>
           </div>
           <div className="pt-3 flex items-end justify-between">
@@ -675,7 +752,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* KPI 2: Campaign target */}
+        {/* KPI 2: Campaign Target */}
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 flex flex-col justify-between cursor-default">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -684,8 +761,19 @@ export function Dashboard() {
               </span>
             </div>
             <div className="text-xs font-medium text-[#64748B]">Campaign target</div>
-            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
-              {displayTargetGMV}
+            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight overflow-hidden">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={`${period}-${displayTargetGMV}`}
+                  initial={{ y: 7, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -7, opacity: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="inline-block"
+                >
+                  {displayTargetGMV}
+                </motion.span>
+              </AnimatePresence>
             </div>
           </div>
           <div className="pt-3 space-y-1.5">
@@ -701,7 +789,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* KPI 3: Affiliates with sales */}
+        {/* KPI 3: Affiliates With Sales */}
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 flex flex-col justify-between cursor-default">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -710,8 +798,19 @@ export function Dashboard() {
               </span>
             </div>
             <div className="text-xs font-medium text-[#64748B]">Affiliates with sales</div>
-            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
-              {displayAffiliatesWithSales}
+            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight overflow-hidden">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={`${period}-${displayAffiliatesWithSales}`}
+                  initial={{ y: 7, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -7, opacity: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="inline-block"
+                >
+                  {displayAffiliatesWithSales}
+                </motion.span>
+              </AnimatePresence>
             </div>
           </div>
           <div className="pt-3 flex items-end justify-between">
@@ -737,13 +836,24 @@ export function Dashboard() {
               <span className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 text-rose-500 flex items-center justify-center">
                 <ShoppingCart size={16} />
               </span>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-2xs">
                 ↑ 37.5%
               </span>
             </div>
             <div className="text-xs font-medium text-[#64748B]">Orders</div>
-            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
-              {displayOrders}
+            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight overflow-hidden">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={`${period}-${displayOrders}`}
+                  initial={{ y: 7, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -7, opacity: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="inline-block"
+                >
+                  {displayOrders}
+                </motion.span>
+              </AnimatePresence>
             </div>
           </div>
           <div className="pt-3 flex items-end justify-between">
@@ -760,7 +870,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* KPI 5: Active campaigns */}
+        {/* KPI 5: Active Campaigns */}
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 shadow-2xs hover:border-[#CBD5E1] hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 flex flex-col justify-between cursor-default">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -769,8 +879,19 @@ export function Dashboard() {
               </span>
             </div>
             <div className="text-xs font-medium text-[#64748B]">Active campaigns</div>
-            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
-              {displayActiveCampaigns}
+            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight overflow-hidden">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={`${period}-${displayActiveCampaigns}`}
+                  initial={{ y: 7, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -7, opacity: 0 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="inline-block"
+                >
+                  {displayActiveCampaigns}
+                </motion.span>
+              </AnimatePresence>
             </div>
           </div>
           <div className="pt-3 flex items-end justify-between">
@@ -791,7 +912,7 @@ export function Dashboard() {
       {/* 4. GMV OVERVIEW & OPERATIONAL INTEL (2 COLUMNS: 8 / 4) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* GMV Overview Chart Panel (Col 8) */}
-        <section className="lg:col-span-8 bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-2xs space-y-4">
+        <section className="lg:col-span-8 bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-2xs space-y-4 hover:border-[#CBD5E1] transition-colors duration-200">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="w-9 h-9 rounded-xl bg-[#2563EB] text-white flex items-center justify-center shadow-xs">
@@ -812,7 +933,7 @@ export function Dashboard() {
                   setGranularity(e.target.value as 'Daily' | 'Weekly' | 'Monthly')
                 }
                 aria-label="Chart granularity"
-                className="appearance-none bg-white border border-[#E2E8F0] rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-[#0F172A] cursor-pointer hover:border-[#CBD5E1] focus:outline-none shadow-2xs"
+                className="appearance-none bg-white border border-[#E2E8F0] rounded-xl px-3 py-1.5 pr-7 text-xs font-semibold text-[#0F172A] cursor-pointer hover:border-[#CBD5E1] focus:outline-none shadow-2xs transition-all active:scale-98"
               >
                 <option value="Daily">Daily</option>
                 <option value="Weekly">Weekly</option>
@@ -856,13 +977,14 @@ export function Dashboard() {
                   width={68}
                 />
                 <Tooltip
+                  cursor={{ stroke: '#2563EB', strokeWidth: 1.5, strokeDasharray: '4 4' }}
                   formatter={(val) => [money(Number(val), false), 'GMV']}
                   labelFormatter={(lbl) => `Date: ${lbl}`}
                   contentStyle={{
                     backgroundColor: '#FFFFFF',
                     borderRadius: 12,
                     border: '1px solid #E2E8F0',
-                    boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
+                    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
                     fontSize: 12,
                     fontWeight: 600,
                   }}
@@ -888,12 +1010,17 @@ export function Dashboard() {
 
         {/* Right Stack: Today's Focus & My Tasks (Col 4) */}
         <div className="lg:col-span-4 space-y-4">
-          {/* Today's Focus Card */}
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-2xs hover:border-[#CBD5E1] transition-all flex items-center justify-between gap-4">
+          {/* Today's Focus Card (Operational Ambient Surface) */}
+          <div className="bg-gradient-to-r from-white via-[#FAF5FF]/40 to-[#EFF6FF]/60 rounded-2xl border border-[#E0E7FF] p-5 shadow-xs hover:border-[#C7D2FE] hover:shadow-sm transition-all flex items-center justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">
-              <span className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#6366F1] to-[#3B82F6] text-white flex items-center justify-center shrink-0 shadow-sm">
+              <motion.span
+                initial={{ rotate: -12, scale: 0.92 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#6366F1] to-[#3B82F6] text-white flex items-center justify-center shrink-0 shadow-sm"
+              >
                 <Sparkles size={18} />
-              </span>
+              </motion.span>
               <div className="min-w-0 space-y-0.5">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">
                   Today&apos;s Focus
@@ -909,14 +1036,14 @@ export function Dashboard() {
             <Link
               href="/actions"
               aria-label="Open Action Center"
-              className="w-8 h-8 rounded-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] flex items-center justify-center transition-colors shrink-0"
+              className="w-8 h-8 rounded-full bg-white border border-[#E2E8F0] text-[#0F172A] hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] flex items-center justify-center transition-all shrink-0 active:scale-90 shadow-2xs"
             >
               <ArrowRight size={14} />
             </Link>
           </div>
 
           {/* My Tasks Card */}
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-2xs space-y-4">
+          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-2xs space-y-4 hover:border-[#CBD5E1] transition-colors duration-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-[#0F172A]">My Tasks</h3>
@@ -926,9 +1053,9 @@ export function Dashboard() {
               </div>
               <Link
                 href="/my-work"
-                className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] flex items-center gap-1"
+                className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] flex items-center gap-1 group"
               >
-                View all <ArrowRight size={12} />
+                View all <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
 
@@ -1030,7 +1157,7 @@ export function Dashboard() {
                   <Link
                     key={t.id}
                     href="/my-work"
-                    className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] hover:bg-white hover:border-[#CBD5E1] transition-all flex items-center justify-between gap-3 text-xs"
+                    className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] hover:bg-white hover:border-[#CBD5E1] hover:shadow-2xs transition-all flex items-center justify-between gap-3 text-xs active:scale-[0.99]"
                   >
                     <div className="min-w-0 space-y-0.5">
                       <div className="font-semibold text-[#0F172A] truncate">{t.name}</div>
@@ -1052,10 +1179,10 @@ export function Dashboard() {
       {/* 5. TOP PERFORMING CAMPAIGNS & RECENT ACTIVITY SECTION (2 COLUMNS: 8 / 4) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Top Performing Campaigns Table (Col 8) */}
-        <section className="lg:col-span-8 bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-2xs space-y-4">
+        <section className="lg:col-span-8 bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-2xs space-y-4 hover:border-[#CBD5E1] transition-colors duration-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center">
+              <span className="w-8 h-8 rounded-xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shadow-xs">
                 <Trophy size={16} />
               </span>
               <h2 className="text-base font-bold text-[#0F172A]">
@@ -1064,9 +1191,9 @@ export function Dashboard() {
             </div>
             <Link
               href="/campaigns"
-              className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] flex items-center gap-1"
+              className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] flex items-center gap-1 group"
             >
-              View all <ArrowRight size={12} />
+              View all <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
 
@@ -1085,9 +1212,12 @@ export function Dashboard() {
               </thead>
               <tbody className="divide-y divide-[#F8FAFC]">
                 {rankedCampaigns.map((c) => (
-                  <tr key={c.id} className="hover:bg-[#F8FAFC] transition-colors">
+                  <tr
+                    key={c.id}
+                    className="hover:bg-[#F8FAFC]/90 hover:translate-x-0.5 transition-all duration-150"
+                  >
                     <td className="py-3.5 pr-3 font-semibold text-[#0F172A]">
-                      <Link href={`/campaigns/${c.id}`} className="hover:text-[#2563EB]">
+                      <Link href={`/campaigns/${c.id}`} className="hover:text-[#2563EB] transition-colors">
                         {c.name}
                       </Link>
                     </td>
@@ -1105,12 +1235,12 @@ export function Dashboard() {
                     </td>
                     <td className="py-3.5 text-right">
                       {c.status === 'Active' ? (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                           Active
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 shadow-2xs">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                           Paused
                         </span>
@@ -1120,7 +1250,7 @@ export function Dashboard() {
                       <button
                         type="button"
                         aria-label="More campaign actions"
-                        className="text-[#94A3B8] hover:text-[#0F172A] transition-colors p-1"
+                        className="text-[#94A3B8] hover:text-[#0F172A] p-1 transition-all active:scale-90"
                       >
                         <MoreHorizontal size={14} />
                       </button>
@@ -1132,27 +1262,32 @@ export function Dashboard() {
           </div>
         </section>
 
-        {/* Recent Activity Card (Col 4) */}
-        <section className="lg:col-span-4 bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-2xs space-y-4">
+        {/* Recent Activity Card with Continuous Temporal Timeline Line (Col 4) */}
+        <section className="lg:col-span-4 bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-2xs space-y-4 hover:border-[#CBD5E1] transition-colors duration-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center">
+              <span className="w-7 h-7 rounded-lg bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shadow-xs">
                 <Bell size={14} />
               </span>
               <h3 className="text-sm font-bold text-[#0F172A]">Recent Activity</h3>
             </div>
             <Link
               href="/imports"
-              className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] flex items-center gap-1"
+              className="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] flex items-center gap-1 group"
             >
-              View all <ArrowRight size={12} />
+              View all <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
 
-          <div className="space-y-4 pt-1">
+          {/* Temporal Timeline Guide */}
+          <div className="relative pl-1 pt-1 space-y-4">
+            <div
+              className="absolute left-[18px] top-3.5 bottom-4 w-px bg-[#E2E8F0] -z-0"
+              aria-hidden="true"
+            />
             {demoActivities.map((a) => (
-              <div key={a.id} className="flex items-start gap-3 text-xs">
-                <span className="w-7 h-7 rounded-full bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center shrink-0 mt-0.5">
+              <div key={a.id} className="relative z-10 flex items-start gap-3 text-xs group">
+                <span className="w-7 h-7 rounded-full bg-white ring-4 ring-white border border-[#E2E8F0] flex items-center justify-center shrink-0 mt-0.5 shadow-xs transition-transform group-hover:scale-105">
                   {a.type === 'creator' ? (
                     <UserPlus size={13} className="text-[#2563EB]" />
                   ) : a.type === 'order' ? (
@@ -1164,12 +1299,14 @@ export function Dashboard() {
                   )}
                 </span>
                 <div className="min-w-0 flex-1 space-y-0.5">
-                  <div className="font-semibold text-[#0F172A] truncate">{a.title}</div>
+                  <div className="font-semibold text-[#0F172A] truncate group-hover:text-[#2563EB] transition-colors">
+                    {a.title}
+                  </div>
                   <div className="text-[11px] text-[#64748B] truncate">{a.detail}</div>
                 </div>
                 <span
                   suppressHydrationWarning
-                  className="text-[10px] text-[#94A3B8] shrink-0 whitespace-nowrap"
+                  className="text-[10px] text-[#94A3B8] shrink-0 whitespace-nowrap pt-0.5 font-medium"
                 >
                   {a.time}
                 </span>
