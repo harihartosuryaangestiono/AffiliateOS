@@ -9,16 +9,14 @@ import {
   Download, 
   Clock, 
   Calendar, 
-  AlertTriangle, 
   CheckCircle2, 
-  TrendingUp, 
   Sparkles,
   Layers,
   Users,
   Package,
   Target,
   BarChart3,
-  ShieldAlert
+  ShieldAlert,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useWorkspace } from '@/components/layout/workspace-provider';
@@ -38,6 +36,7 @@ import {
 import { resolveComparisonPeriod } from '@/lib/analytics/comparison';
 import { AnalyticsPeriodSelector } from './period-selector';
 import { KPIComparisonStrip } from './kpi-comparison-strip';
+import { ExecutiveStoryLayer } from './executive-story-layer';
 import { TrendChart } from './trend-chart';
 import { ParetoChart } from './pareto-chart';
 import { CreatorLeaderboards } from './creator-leaderboards';
@@ -46,7 +45,6 @@ import { ContributionBreakdown } from './contribution-breakdown';
 import { BrandCampaignSection } from './brand-campaign-section';
 import { StockCorrelationSection } from './stock-correlation-section';
 import { AIInsightsCard } from './ai-insights-card';
-import { money, number } from '@/lib/data/metrics';
 
 interface MarketplaceAnalyticsProps {
   market: 'Shopee' | 'TikTok';
@@ -150,42 +148,62 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
   const isShopee = market === 'Shopee';
 
   const tabs = [
-    { id: 'overview', label: 'Overview & Trends', icon: BarChart3 },
-    { id: 'creators', label: isShopee ? 'Affiliates & Creators' : 'Creators', icon: Users },
-    { id: 'products', label: 'Products & SKUs', icon: Package },
-    { id: 'contribution', label: 'Contribution to Change', icon: Layers },
-    { id: 'campaigns', label: 'Campaigns & Brands', icon: Target },
-    { id: 'stock', label: 'Stock Supply Risks', icon: ShieldAlert },
-    { id: 'ai', label: 'AI Operational Briefing', icon: Sparkles },
+    { id: 'overview', label: 'Overview & Trends', icon: BarChart3, group: 'core' },
+    { id: 'creators', label: isShopee ? 'Affiliates & Creators' : 'Creators', icon: Users, group: 'drivers' },
+    { id: 'products', label: 'Products & SKUs', icon: Package, group: 'drivers' },
+    { id: 'contribution', label: 'Contribution to Change', icon: Layers, group: 'drivers' },
+    { id: 'campaigns', label: 'Campaigns & Brands', icon: Target, group: 'operations' },
+    { id: 'stock', label: 'Stock Supply Risks', icon: ShieldAlert, group: 'operations' },
+    { id: 'ai', label: 'AI Operational Briefing', icon: Sparkles, group: 'operations' },
   ];
 
   const hasData = analytics.kpiSummary.gmv.current > 0 || analytics.timeSeries.some(p => p.currentValue > 0);
 
   return (
-    <div className="space-y-6 pb-16">
-      {/* 1. MARKETPLACE ANALYTICS HEADER */}
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-2xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex items-start sm:items-center gap-4">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${
+    <div className="space-y-5 pb-16">
+      {/* 1. PLATFORM INTELLIGENCE HEADER */}
+      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 sm:p-6 shadow-2xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="flex items-start sm:items-center gap-4 min-w-0">
+            {/* Distinctive Platform Identity Badge */}
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border shadow-2xs ${
               isShopee 
-                ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' 
-                : 'bg-slate-900 text-white border-slate-800'
+                ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/10 text-amber-600 border-amber-500/30' 
+                : 'bg-gradient-to-br from-slate-900 to-slate-800 text-white border-slate-700'
             }`}>
               {isShopee ? <ShoppingBag size={24} /> : <Music2 size={24} />}
             </div>
-            <div>
+
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A] tracking-tight">
-                  {market} Analytics Workspace
+                <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
+                  {market} Analytics Intelligence
                 </h1>
-                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide border ${
-                  isShopee 
-                    ? 'bg-amber-50 text-amber-700 border-amber-200' 
-                    : 'bg-slate-100 text-slate-800 border-slate-300'
-                }`}>
-                  {market} Verified
-                </span>
+
+                {/* Sibling Marketplace Quick Switcher (Section 12 Continuity) */}
+                <div className="inline-flex items-center p-0.5 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-xs font-semibold">
+                  <Link
+                    href="/shopee"
+                    className={`px-2.5 py-1 rounded-md transition-all ${
+                      isShopee
+                        ? 'bg-white text-amber-700 shadow-2xs font-bold'
+                        : 'text-[#64748B] hover:text-[#0F172A]'
+                    }`}
+                  >
+                    Shopee
+                  </Link>
+                  <Link
+                    href="/tiktok"
+                    className={`px-2.5 py-1 rounded-md transition-all ${
+                      !isShopee
+                        ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                        : 'text-[#64748B] hover:text-[#0F172A]'
+                    }`}
+                  >
+                    TikTok
+                  </Link>
+                </div>
+
                 {analytics.coverage.isH2Ready ? (
                   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
                     <CheckCircle2 size={12} />
@@ -198,7 +216,8 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
                   </span>
                 )}
               </div>
-              <p className="text-xs sm:text-sm text-[#64748B] mt-1 flex flex-wrap items-center gap-2 font-normal">
+
+              <p className="text-xs text-[#64748B] mt-1 flex flex-wrap items-center gap-2 font-normal">
                 <span>Deterministic period performance, attribution drivers &amp; risk telemetry.</span>
                 <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#475569] bg-[#F8FAFC] px-2 py-0.5 rounded-md border border-[#E2E8F0]">
                   Timezone: Asia/Jakarta (WIB)
@@ -208,18 +227,18 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
           </div>
 
           {/* Action CTAs */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
             <button
               type="button"
               onClick={handleExportCSV}
-              className="h-9 px-3.5 rounded-xl border border-[#E2E8F0] bg-white hover:bg-[#F8FAFC] text-[#0F172A] text-xs font-semibold shadow-2xs inline-flex items-center gap-1.5 transition-all"
+              className="h-9 px-3.5 rounded-xl border border-[#CBD5E1] bg-white hover:bg-[#F8FAFC] text-[#0F172A] text-xs font-semibold shadow-2xs inline-flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
             >
               <Download size={14} className="text-[#64748B]" />
               Export Analysis
             </button>
             <Link
               href={`/imports/${market.toLowerCase()}`}
-              className="h-9 px-3.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold shadow-2xs inline-flex items-center gap-1.5 transition-all"
+              className="h-9 px-3.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold shadow-xs inline-flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
             >
               <Upload size={14} />
               Import {market} Data
@@ -227,12 +246,12 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
           </div>
         </div>
 
-        {/* Status & Freshness Ribbon */}
-        <div className="mt-5 pt-4 border-t border-[#F1F5F9] flex flex-wrap items-center justify-between gap-4 text-xs text-[#64748B]">
-          <div className="flex flex-wrap items-center gap-4">
+        {/* Data Freshness Ribbon */}
+        <div className="mt-4 pt-3.5 border-t border-[#F1F5F9] flex flex-wrap items-center justify-between gap-3 text-xs text-[#64748B]">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <Calendar size={14} className="text-[#2563EB]" />
-              <span className="font-medium text-[#0F172A]">{analytics.currentPeriod.label}</span>
+              <Calendar size={13} className="text-[#2563EB]" />
+              <span className="font-semibold text-[#0F172A]">{analytics.currentPeriod.label}</span>
             </div>
             {analytics.comparisonPeriod && (
               <div className="flex items-center gap-1.5">
@@ -240,23 +259,20 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
                 <span className="font-medium text-[#475569] bg-[#F1F5F9] px-2 py-0.5 rounded-md">
                   {analytics.comparisonPeriod.label}
                 </span>
-                <span className="text-[11px] text-[#64748B]">
-                  ({analytics.comparisonPeriod.dayCount} days vs {analytics.currentPeriod.dayCount} days)
-                </span>
               </div>
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-[11px]">
+          <div className="flex flex-wrap items-center gap-3 text-[11px]">
             <div>
-              <span className="text-[#94A3B8]">Data coverage: </span>
+              <span className="text-[#94A3B8]">Coverage: </span>
               <span className="font-semibold text-[#0F172A]">
                 {analytics.coverage.latestDate 
-                  ? `Complete through ${formatDateHuman(analytics.coverage.latestDate)}` 
-                  : 'No imports available'}
+                  ? `Through ${formatDateHuman(analytics.coverage.latestDate)}` 
+                  : 'No imports'}
               </span>
             </div>
-            <div className="border-l border-[#E2E8F0] pl-4">
+            <div className="border-l border-[#E2E8F0] pl-3">
               <span className="text-[#94A3B8]">Last import: </span>
               <span className="font-semibold text-[#0F172A]">
                 {analytics.coverage.lastImportedAt 
@@ -266,19 +282,9 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
             </div>
           </div>
         </div>
-
-        {/* Fair Comparison Warning if unequal duration */}
-        {analytics.coverage.hasFairComparisonWarning && (
-          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
-            <AlertTriangle size={15} className="shrink-0 text-amber-600" />
-            <span>
-              <strong>Fair Comparison Warning:</strong> {analytics.coverage.warningMessage || `The current period (${analytics.currentPeriod.dayCount} days) has a different duration than the comparison period (${analytics.comparisonPeriod?.dayCount} days).`}
-            </span>
-          </div>
-        )}
       </div>
 
-      {/* 2. GLOBAL ANALYTICS PERIOD SELECTOR */}
+      {/* 2. UNIFIED ANALYTICS PERIOD SELECTOR */}
       <AnalyticsPeriodSelector
         currentPeriod={period}
         comparisonPeriod={comparison}
@@ -290,7 +296,7 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
       {/* EMPTY STATE IF NO DATA IN WORKSPACE */}
       {!hasData ? (
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-12 text-center shadow-2xs space-y-4">
-          <div className="w-16 h-16 rounded-full bg-[#EFF6FF] border border-[#BFDBFE] text-[#2563EB] mx-auto flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-[#EFF6FF] border border-[#BFDBFE] text-[#2563EB] mx-auto flex items-center justify-center shadow-xs">
             {isShopee ? <ShoppingBag size={28} /> : <Music2 size={28} />}
           </div>
           <div className="max-w-md mx-auto space-y-1">
@@ -305,7 +311,7 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
           <div className="pt-2">
             <Link
               href={`/imports/${market.toLowerCase()}`}
-              className="h-10 px-5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold shadow-xs inline-flex items-center gap-2 transition-all"
+              className="h-10 px-5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold shadow-xs inline-flex items-center gap-2 transition-all active:scale-95"
             >
               <Upload size={14} />
               Import {market} Data
@@ -314,141 +320,18 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
         </div>
       ) : (
         <>
-          {/* 3. DETERMINISTIC "WHAT CHANGED?" SUMMARY STRIP */}
-          <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 shadow-2xs">
-            <div className="flex items-center justify-between pb-3 border-b border-[#F1F5F9]">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-lg bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center">
-                  <TrendingUp size={15} />
-                </span>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
-                  Executive Movement: What Changed?
-                </h3>
-              </div>
-              <span className="text-[11px] font-medium text-[#64748B]">
-                {analytics.currentPeriod.label} vs {analytics.comparisonPeriod?.label || 'Previous'}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 pt-4">
-              {/* GMV Change */}
-              <div className="space-y-1">
-                <p className="text-[11px] font-semibold text-[#64748B]">Affiliate GMV</p>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm font-bold text-[#0F172A]">
-                    {money(analytics.kpiSummary.gmv.current)}
-                  </span>
-                </div>
-                {analytics.kpiSummary.gmv.percentageDelta !== null && (
-                  <span className={`text-[11px] font-semibold inline-flex items-center gap-0.5 ${
-                    analytics.kpiSummary.gmv.percentageDelta > 0 
-                      ? 'text-emerald-600' 
-                      : analytics.kpiSummary.gmv.percentageDelta < 0 ? 'text-rose-600' : 'text-[#64748B]'
-                  }`}>
-                    {analytics.kpiSummary.gmv.percentageDelta > 0 ? '+' : ''}
-                    {analytics.kpiSummary.gmv.percentageDelta.toFixed(1)}%
-                  </span>
-                )}
-              </div>
-
-              {/* Orders Change */}
-              <div className="space-y-1">
-                <p className="text-[11px] font-semibold text-[#64748B]">Total Orders</p>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm font-bold text-[#0F172A]">
-                    {number(analytics.kpiSummary.orders.current)}
-                  </span>
-                </div>
-                {analytics.kpiSummary.orders.percentageDelta !== null && (
-                  <span className={`text-[11px] font-semibold inline-flex items-center gap-0.5 ${
-                    analytics.kpiSummary.orders.percentageDelta > 0 
-                      ? 'text-emerald-600' 
-                      : analytics.kpiSummary.orders.percentageDelta < 0 ? 'text-rose-600' : 'text-[#64748B]'
-                  }`}>
-                    {analytics.kpiSummary.orders.percentageDelta > 0 ? '+' : ''}
-                    {analytics.kpiSummary.orders.percentageDelta.toFixed(1)}%
-                  </span>
-                )}
-              </div>
-
-              {/* Selling Creators */}
-              <div className="space-y-1">
-                <p className="text-[11px] font-semibold text-[#64748B]">Selling Creators</p>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm font-bold text-[#0F172A]">
-                    {number(analytics.kpiSummary.affiliatesWithSales.current)}
-                  </span>
-                </div>
-                {analytics.kpiSummary.affiliatesWithSales.absoluteDelta !== null && (
-                  <span className="text-[11px] font-semibold text-[#64748B]">
-                    {analytics.kpiSummary.affiliatesWithSales.absoluteDelta > 0 ? '+' : ''}
-                    {analytics.kpiSummary.affiliatesWithSales.absoluteDelta} net creators
-                  </span>
-                )}
-              </div>
-
-              {/* Largest Product Driver */}
-              <div className="space-y-1">
-                <p className="text-[11px] font-semibold text-[#64748B]">Top Product Driver</p>
-                {analytics.whatChanged.largestProductDriver ? (
-                  <>
-                    <p className="text-xs font-bold text-[#0F172A] truncate" title={analytics.whatChanged.largestProductDriver.name}>
-                      {analytics.whatChanged.largestProductDriver.name}
-                    </p>
-                    <span className="text-[11px] font-semibold text-emerald-600">
-                      +{money(analytics.whatChanged.largestProductDriver.delta)}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs text-[#94A3B8]">No expansion</span>
-                )}
-              </div>
-
-              {/* Largest Creator Driver */}
-              <div className="space-y-1">
-                <p className="text-[11px] font-semibold text-[#64748B]">Top Creator Driver</p>
-                {analytics.whatChanged.largestCreatorDriver ? (
-                  <>
-                    <p className="text-xs font-bold text-[#0F172A] truncate" title={analytics.whatChanged.largestCreatorDriver.name}>
-                      {analytics.whatChanged.largestCreatorDriver.name}
-                    </p>
-                    <span className="text-[11px] font-semibold text-emerald-600">
-                      +{money(analytics.whatChanged.largestCreatorDriver.delta)}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs text-[#94A3B8]">No expansion</span>
-                )}
-              </div>
-
-              {/* Largest Decline */}
-              <div className="space-y-1">
-                <p className="text-[11px] font-semibold text-[#64748B]">Largest Decline</p>
-                {analytics.whatChanged.largestDecline ? (
-                  <>
-                    <p className="text-xs font-bold text-[#0F172A] truncate" title={analytics.whatChanged.largestDecline.name}>
-                      {analytics.whatChanged.largestDecline.name}
-                    </p>
-                    <span className="text-[11px] font-semibold text-rose-600">
-                      {money(analytics.whatChanged.largestDecline.delta)}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs text-[#94A3B8]">No declines</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* 4. EXECUTIVE OVERVIEW - KPI COMPARISON STRIP */}
+          {/* 3. EXECUTIVE SNAPSHOT (ASYMMETRIC KPI HIERARCHY) */}
           <KPIComparisonStrip 
             kpis={analytics.kpiSummary}
             marketplace={market}
           />
 
-          {/* 5. STICKY SUB-NAVIGATION TABS */}
+          {/* 4. EXECUTIVE STORY LAYER (WHAT CHANGED → WHY → RISK → ACTION) */}
+          <ExecutiveStoryLayer analytics={analytics} />
+
+          {/* 5. REARCHITECTED STICKY SUB-NAVIGATION */}
           <div className="sticky top-16 z-20 bg-[#F8FAFC]/95 backdrop-blur-md pt-2 pb-1 border-b border-[#E2E8F0]">
-            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -457,7 +340,7 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`relative h-9 px-3.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 whitespace-nowrap transition-all duration-150 active:scale-95 ${
+                    className={`relative h-9 px-3.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 whitespace-nowrap transition-all duration-150 active:scale-95 cursor-pointer ${
                       isActive
                         ? 'text-white'
                         : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white border border-transparent hover:border-[#E2E8F0]'
@@ -481,91 +364,93 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
           </div>
 
           {/* 6. TAB VIEW CONTENTS */}
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Dual-period Trend Chart */}
-              <TrendChart
-                timeSeries={analytics.timeSeries}
-                hasComparison={Boolean(analytics.comparisonPeriod)}
-                currentLabel={analytics.currentPeriod.label}
-                comparisonLabel={analytics.comparisonPeriod?.label}
-              />
+          <div className="space-y-6">
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                {/* Hero Analytics Visual: Performance Trajectory */}
+                <TrendChart
+                  timeSeries={analytics.timeSeries}
+                  hasComparison={Boolean(analytics.comparisonPeriod)}
+                  currentLabel={analytics.currentPeriod.label}
+                  comparisonLabel={analytics.comparisonPeriod?.label}
+                />
 
-              {/* Side-by-Side Pareto Charts: Creators & Products */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Side-by-Side Pareto Charts: Creators & Products */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  <ParetoChart
+                    pareto={analytics.creatorAnalytics.pareto}
+                    title="Creator Revenue Concentration"
+                    subtitle="Deterministic 80/20 against total relevant population GMV"
+                  />
+                  <ParetoChart
+                    pareto={analytics.productAnalytics.pareto}
+                    title="Product Revenue Concentration"
+                    subtitle="Deterministic 80/20 against total relevant population GMV"
+                  />
+                </div>
+
+                {/* Quick AI Preview */}
+                <AIInsightsCard analytics={analytics} />
+              </div>
+            )}
+
+            {activeTab === 'creators' && (
+              <div className="space-y-6">
+                <CreatorLeaderboards
+                  topByGmv={analytics.creatorAnalytics.topByGmv}
+                  topByOrders={analytics.creatorAnalytics.topByOrders}
+                  topGrowth={analytics.creatorAnalytics.topGrowth}
+                  largestDeclining={analytics.creatorAnalytics.largestDeclining}
+                  newlyActive={analytics.creatorAnalytics.newlyActive}
+                  losingMomentum={analytics.creatorAnalytics.losingMomentum}
+                  concentrationRisk={analytics.creatorAnalytics.concentrationRisk}
+                />
                 <ParetoChart
                   pareto={analytics.creatorAnalytics.pareto}
-                  title="Creator GMV Concentration (Pareto)"
-                  subtitle="Deterministic 80/20 against total relevant population GMV"
-                />
-                <ParetoChart
-                  pareto={analytics.productAnalytics.pareto}
-                  title="Product GMV Concentration (Pareto)"
-                  subtitle="Deterministic 80/20 against total relevant population GMV"
+                  title="Creator 80/20 Concentration (Full Population GMV)"
+                  subtitle="Cumulative contribution against total marketplace affiliate revenue"
                 />
               </div>
+            )}
 
-              {/* Quick AI Preview */}
-              <AIInsightsCard analytics={analytics} />
-            </div>
-          )}
+            {activeTab === 'products' && (
+              <div className="space-y-6">
+                <ProductAnalyticsTable items={analytics.productAnalytics.items} />
+                <ParetoChart
+                  pareto={analytics.productAnalytics.pareto}
+                  title="Product 80/20 Concentration (Full Population GMV)"
+                  subtitle="Cumulative contribution against total marketplace affiliate revenue"
+                />
+              </div>
+            )}
 
-          {activeTab === 'creators' && (
-            <div className="space-y-6">
-              <CreatorLeaderboards
-                topByGmv={analytics.creatorAnalytics.topByGmv}
-                topByOrders={analytics.creatorAnalytics.topByOrders}
-                topGrowth={analytics.creatorAnalytics.topGrowth}
-                largestDeclining={analytics.creatorAnalytics.largestDeclining}
-                newlyActive={analytics.creatorAnalytics.newlyActive}
-                losingMomentum={analytics.creatorAnalytics.losingMomentum}
-                concentrationRisk={analytics.creatorAnalytics.concentrationRisk}
-              />
-              <ParetoChart
-                pareto={analytics.creatorAnalytics.pareto}
-                title="Creator 80/20 Concentration (Full Population GMV)"
-                subtitle="Cumulative contribution against total marketplace affiliate revenue"
-              />
-            </div>
-          )}
+            {activeTab === 'contribution' && (
+              <div className="space-y-6">
+                <ContributionBreakdown contribution={analytics.contributionToChange} />
+              </div>
+            )}
 
-          {activeTab === 'products' && (
-            <div className="space-y-6">
-              <ProductAnalyticsTable items={analytics.productAnalytics.items} />
-              <ParetoChart
-                pareto={analytics.productAnalytics.pareto}
-                title="Product 80/20 Concentration (Full Population GMV)"
-                subtitle="Cumulative contribution against total marketplace affiliate revenue"
-              />
-            </div>
-          )}
+            {activeTab === 'campaigns' && (
+              <div className="space-y-6">
+                <BrandCampaignSection
+                  brands={analytics.brandAnalytics}
+                  campaigns={analytics.campaignAnalytics}
+                />
+              </div>
+            )}
 
-          {activeTab === 'contribution' && (
-            <div className="space-y-6">
-              <ContributionBreakdown contribution={analytics.contributionToChange} />
-            </div>
-          )}
+            {activeTab === 'stock' && (
+              <div className="space-y-6">
+                <StockCorrelationSection items={analytics.stockCorrelation} />
+              </div>
+            )}
 
-          {activeTab === 'campaigns' && (
-            <div className="space-y-6">
-              <BrandCampaignSection
-                brands={analytics.brandAnalytics}
-                campaigns={analytics.campaignAnalytics}
-              />
-            </div>
-          )}
-
-          {activeTab === 'stock' && (
-            <div className="space-y-6">
-              <StockCorrelationSection items={analytics.stockCorrelation} />
-            </div>
-          )}
-
-          {activeTab === 'ai' && (
-            <div className="space-y-6">
-              <AIInsightsCard analytics={analytics} />
-            </div>
-          )}
+            {activeTab === 'ai' && (
+              <div className="space-y-6">
+                <AIInsightsCard analytics={analytics} />
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>

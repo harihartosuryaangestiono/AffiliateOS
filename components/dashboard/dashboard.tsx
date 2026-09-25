@@ -469,6 +469,28 @@ export function Dashboard() {
             {/* Backdrop glow */}
             <circle cx="580" cy="180" r="220" fill="url(#heroRadialGlow)" />
 
+            {/* Creator Network Constellation & Connection Lines (Creators + Connection + Growth) */}
+            <g opacity="0.65" stroke="#93C5FD" strokeWidth="1.2" strokeDasharray="3 3">
+              <line x1="390" y1="120" x2="480" y2="70" />
+              <line x1="480" y1="70" x2="570" y2="130" />
+              <line x1="570" y1="130" x2="660" y2="90" />
+              <line x1="480" y1="70" x2="450" y2="190" />
+              <line x1="450" y1="190" x2="570" y2="130" />
+              <line x1="570" y1="130" x2="620" y2="240" />
+              <line x1="620" y1="240" x2="710" y2="190" />
+            </g>
+
+            {/* Network Nodes (Affiliate Hubs) */}
+            <g fill="#FFFFFF" stroke="#3B82F6" strokeWidth="2">
+              <circle cx="390" cy="120" r="3.5" />
+              <circle cx="480" cy="70" r="4.5" fill="#60A5FA" />
+              <circle cx="570" cy="130" r="5" fill="#2563EB" />
+              <circle cx="660" cy="90" r="4" fill="#93C5FD" />
+              <circle cx="450" cy="190" r="3.5" />
+              <circle cx="620" cy="240" r="4.5" fill="#3B82F6" />
+              <circle cx="710" cy="190" r="3" />
+            </g>
+
             {/* Main sweeping iridescent ribbon loop */}
             <path
               d="M320 280C460 380 640 330 720 220C800 110 700 40 560 60C440 80 340 180 420 270C480 340 680 310 740 190"
