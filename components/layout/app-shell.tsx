@@ -24,6 +24,12 @@ import {
   FileText,
   ShieldCheck,
   ChevronDown,
+  FileBarChart2,
+  Building2,
+  Sparkles,
+  PackageCheck,
+  FolderDown,
+  Cpu,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { RouteTransition } from '@/components/motion/route-transition';
@@ -68,11 +74,21 @@ const groups: {
     ],
   },
   {
-    name: 'PERFORMANCE',
+    name: 'ANALYTICS & REPORTS',
     items: [
-      ['Overview', 'performance', ChartNoAxesCombined],
-      ['TikTok', 'tiktok', Music2],
-      ['Shopee', 'shopee', ShoppingBag],
+      ['Performance Overview', 'performance', ChartNoAxesCombined],
+      ['TikTok Analytics', 'tiktok', Music2],
+      ['Shopee Analytics', 'shopee', ShoppingBag],
+      ['Reports & Compare', 'reports', FileBarChart2],
+    ],
+  },
+  {
+    name: 'DATA & CATALOG',
+    items: [
+      ['Clients', 'clients', Building2],
+      ['Brands', 'brands', Sparkles],
+      ['Products', 'products', Package],
+      ['Data Imports', 'imports', FolderDown],
     ],
   },
   {
@@ -84,18 +100,19 @@ const groups: {
     ],
   },
   {
-    name: 'CAMPAIGN',
+    name: 'CAMPAIGNS & ACTIVATIONS',
     items: [
       ['Campaigns', 'campaigns', Flag],
       ['Deals', 'campaigns?view=deals', Handshake],
-      ['Samples', 'samples', Package],
+      ['Samples', 'samples', PackageCheck],
       ['Content & Logs', 'hsl', FileText],
-      ['Analytics', 'performance', ChartNoAxesCombined],
+      ['Peak Days', 'peak-days', CalendarDays],
     ],
   },
   {
-    name: 'SETTINGS',
+    name: 'SETTINGS & ADMIN',
     items: [
+      ['Integrations', 'settings/integrations', Cpu],
       ['Users & Roles', 'users', ShieldCheck],
       ['Workspace Settings', 'settings', Settings],
     ],
@@ -103,9 +120,13 @@ const groups: {
 ];
 
 const quickActions = [
+  ['Report', '/reports?create=1'],
   ['Creator', '/creators?create=1'],
   ['Campaign', '/campaigns?create=1'],
   ['Task', '/tasks?create=1'],
+  ['Client', '/clients?create=1'],
+  ['Brand', '/brands?create=1'],
+  ['Product', '/products?create=1'],
   ['Sample', '/samples?create=1'],
   ['HSL Activation', '/hsl?create=1'],
   ['Peak Day', '/peak-days?create=1'],
@@ -422,12 +443,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                   'Create ' + label,
                   url,
                 ]),
+                ['Open Reports & Compare', '/reports'],
                 ['Open Action Center', '/actions'],
                 ['Open My Work', '/my-work'],
                 ['Open HSL', '/hsl'],
                 ['Open Peak Days', '/peak-days'],
-                ['Import Shopee Data', '/imports'],
-                ['Import TikTok Data', '/imports'],
+                ['Import Center', '/imports'],
+                ['Integrations & Sync', '/settings/integrations'],
+                ['Workspace Settings', '/settings'],
               ].map(([label, url]) => (
                 <CommandItem
                   key={url}

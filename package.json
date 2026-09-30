@@ -7,8 +7,9 @@
   },
   "scripts": {
     "dev": "vinext dev",
-    "build": "vinext build",
-    "start": "wrangler dev --config dist/server/wrangler.json",
+    "build": "next build --webpack",
+    "build:vinext": "vinext build",
+    "start": "next start",
     "lint": "oxlint",
     "format": "oxfmt",
     "dev:next": "next dev",
