@@ -9,14 +9,17 @@ export async function loadWorkspace() {
   const demoCookie = jar.get('affiliateos-mode')?.value === 'demo';
   if (workspaceMode()==='production'&&!configured()&&!demoCookie)
     throw Error('Production mode requires a Supabase URL and publishable key. AffiliateOS will not fall back to demo data.');
-  if (workspaceMode()==='demo'||demoCookie)
+  if (workspaceMode()==='demo'||demoCookie) {
+    const rawName = jar.get('affiliateos-user-name')?.value;
+    const resolvedName = rawName ? decodeURIComponent(rawName) : 'Hariharto Surya';
     return {
       initialData: seed,
       demo: true,
       role: 'Admin' as Role,
-      name: 'Demo Operator',
+      name: resolvedName,
       workspaceId: 'demo-workspace',
     };
+  }
   if(!configured()) throw Error('Supabase configuration is incomplete.');
   let auth;
   try {

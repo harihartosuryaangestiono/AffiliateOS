@@ -34,7 +34,7 @@ export function WorkspaceProvider({
   initialData,
   demo,
   role = 'Admin',
-  name = 'Demo Operator',
+  name = 'Hariharto Surya',
 }: {
   children: ReactNode;
   initialData: WorkspaceData;
@@ -56,7 +56,9 @@ export function WorkspaceProvider({
       return upgradeDemo(initialData);
     }
   }, [stored, demo, liveData, initialData]);
-  const displayName = useBrowserStorage('affiliateos-profile-name', name, demo);
+  const fallbackName = (!name || name === 'Demo Operator') ? 'Hariharto Surya' : name;
+  const rawStored = useBrowserStorage('affiliateos-profile-name', fallbackName, demo);
+  const displayName = (!rawStored || rawStored === 'Demo Operator') ? fallbackName : rawStored;
   const setData = (next: WorkspaceData) => {
     if (demo) writeBrowserStorage('affiliateos-demo-v1', JSON.stringify(next));
     else update(next);

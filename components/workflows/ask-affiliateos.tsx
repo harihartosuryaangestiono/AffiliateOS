@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { toast } from 'sonner';
+import { motion } from 'motion/react';
+import { AISparkleIcon, AIGenerationState, ProgressiveChunkReveal } from '@/components/motion/ai-signature';
 
 interface AskResponse {
   answer: string;
@@ -129,30 +131,27 @@ export function AskAffiliateOSDrawer({ onClose }: { onClose: () => void }) {
           )}
 
           {loading && (
-            <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 text-[#2563EB] text-xs font-medium space-y-2.5 transition-opacity duration-200">
-              <div className="flex items-center gap-2.5">
-                <Sparkles size={14} className="animate-spin text-[#2563EB]" style={{ animationDuration: '3s' }} />
-                <span className="font-semibold">Synthesizing grounded workspace intelligence...</span>
-              </div>
-              <div className="space-y-1.5 pt-1">
-                <div className="h-2 bg-blue-200/60 rounded-full animate-pulse w-3/4" />
-                <div className="h-2 bg-blue-200/40 rounded-full animate-pulse w-5/6" />
-                <div className="h-2 bg-blue-200/30 rounded-full animate-pulse w-1/2" />
-              </div>
-            </div>
+            <AIGenerationState
+              label="Synthesizing grounded workspace intelligence..."
+              className="my-2"
+            />
           )}
 
           {response && (
             <div className="space-y-3.5 transition-all duration-200 animate-in fade-in-50 slide-in-from-bottom-2">
-              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5"
+              >
                 <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">Pertanyaan Anda:</span>
                 <p className="text-sm font-semibold text-[#0F172A]">{query}</p>
-              </div>
+              </motion.div>
 
               <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-[#2563EB] flex items-center gap-1.5">
-                    <Sparkles size={13} /> Jawaban AffiliateOS:
+                    <AISparkleIcon size={14} className="text-[#2563EB]" /> Jawaban AffiliateOS:
                   </span>
                   {response.domain_routed && (
                     <span className="text-[10px] text-[#64748B] font-mono bg-white px-2 py-0.5 rounded-md border border-blue-200/60">
@@ -160,9 +159,10 @@ export function AskAffiliateOSDrawer({ onClose }: { onClose: () => void }) {
                     </span>
                   )}
                 </div>
-                <p className="text-[#334155] leading-relaxed text-xs whitespace-pre-wrap">
-                  {response.answer}
-                </p>
+                <ProgressiveChunkReveal
+                  text={response.answer}
+                  className="text-[#334155] leading-relaxed text-xs"
+                />
 
                 {response.references.length > 0 && (
                   <div className="pt-2.5 border-t border-blue-200/70 space-y-1.5">

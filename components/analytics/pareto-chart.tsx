@@ -178,6 +178,8 @@ export function ParetoChart({ pareto, title, subtitle }: Props) {
               radius={[6, 6, 0, 0]}
               maxBarSize={36}
               isAnimationActive={!prefersReducedMotion}
+              animationDuration={400}
+              animationEasing="ease-out"
             />
 
             <Line
@@ -190,6 +192,9 @@ export function ParetoChart({ pareto, title, subtitle }: Props) {
               dot={{ r: 3, fill: '#6366F1', stroke: '#FFFFFF', strokeWidth: 1.5 }}
               activeDot={{ r: 5, fill: '#6366F1', stroke: '#FFFFFF', strokeWidth: 2 }}
               isAnimationActive={!prefersReducedMotion}
+              animationBegin={200}
+              animationDuration={500}
+              animationEasing="ease-out"
             />
           </ComposedChart>
         </ResponsiveContainer>

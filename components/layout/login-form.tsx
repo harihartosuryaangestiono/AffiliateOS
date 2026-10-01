@@ -17,14 +17,16 @@ export function LoginForm({ configured }: { configured: boolean }) {
     setBusy(true);
     setError('');
     const fields = new FormData(e.currentTarget);
-    const email = String(fields.get('email') || '');
-    const enteredName = String(fields.get('name') || '').trim() || name.trim() || 'Hariharto Surya';
+    const rawName = fields.get('name');
+    const nameStr = typeof rawName === 'string' ? rawName.trim() : '';
+    const enteredName = nameStr || name.trim() || 'Hariharto Surya';
 
     // If Supabase is not connected on Vercel or running in standalone mode
     if (!configured) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('affiliateos-profile-name', enteredName);
         document.cookie = 'affiliateos-mode=demo; path=/; max-age=86400';
+        document.cookie = 'affiliateos-user-name=' + encodeURIComponent(enteredName) + '; path=/; max-age=86400';
       }
       window.location.assign('/dashboard');
       return;
@@ -40,6 +42,7 @@ export function LoginForm({ configured }: { configured: boolean }) {
       if (!r.ok) throw Error(body.error);
       if (typeof window !== 'undefined') {
         localStorage.setItem('affiliateos-profile-name', enteredName);
+        document.cookie = 'affiliateos-user-name=' + encodeURIComponent(enteredName) + '; path=/; max-age=86400';
       }
       window.location.assign('/dashboard');
     } catch (e) {

@@ -64,6 +64,7 @@ import { Button } from '@/components/ui/button';
 import { AskAffiliateOSDrawer } from '@/components/workflows/ask-affiliateos';
 import { writeBrowserStorage } from '@/hooks/use-browser-storage';
 import { toast } from 'sonner';
+import type { Role } from '@/types/domain';
 
 const groups: {
   name: string;
@@ -155,23 +156,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const router = useRouter();
   const { data, name, role, demo, canEdit } = useWorkspace();
+  const currentName = name && name !== 'Demo Operator' ? name : 'Hariharto Surya';
   const [search, setSearch] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
-  const [editName, setEditName] = useState(name || 'Hariharto Surya');
-  const [editRole, setEditRole] = useState(role || 'Admin');
-
-  useEffect(() => {
-    if (name && name !== 'Demo Operator') {
-      setEditName(name);
-    } else {
-      setEditName('Hariharto Surya');
-    }
-  }, [name]);
-
-  useEffect(() => {
-    if (role) setEditRole(role);
-  }, [role]);
+  const [editName, setEditName] = useState(currentName);
+  const [editRole, setEditRole] = useState<Role>(role || 'Admin');
 
   const currentQuery = useSyncExternalStore(
     subscribeToLocation,
@@ -296,7 +286,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     return (
                       <SidebarMenuItem key={rawUrl}>
                         <SidebarMenuButton
-                          render={<button type="button" onClick={() => setAiOpen(true)} />}
+                          onClick={() => setAiOpen(true)}
                           tooltip="Tanya AI Copilot"
                           className="group relative flex items-center justify-between w-full px-3 py-1.5 rounded-xl text-sm font-semibold transition-all bg-gradient-to-r from-blue-50/80 to-indigo-50/80 text-blue-700 hover:from-blue-100 hover:to-indigo-100 border border-blue-200/80 cursor-pointer shadow-2xs"
                         >
@@ -599,8 +589,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="font-semibold text-[#0F172A] block mb-1">Nama Lengkap</label>
+                <label htmlFor="profile-full-name" className="font-semibold text-[#0F172A] block mb-1">Nama Lengkap</label>
                 <input
+                  id="profile-full-name"
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
@@ -610,10 +601,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
 
               <div>
-                <label className="font-semibold text-[#0F172A] block mb-1">Role Akun</label>
+                <label htmlFor="profile-role" className="font-semibold text-[#0F172A] block mb-1">Role Akun</label>
                 <select
+                  id="profile-role"
                   value={editRole}
-                  onChange={(e) => setEditRole(e.target.value as any)}
+                  onChange={(e) => setEditRole(e.target.value as Role)}
                   className="w-full text-xs font-medium px-3 py-2 rounded-lg border border-[#CBD5E1] bg-white text-[#0F172A]"
                 >
                   <option value="Admin">Admin (Full Access & Controls)</option>
@@ -633,6 +625,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 href="/login"
                 onClick={() => {
                   document.cookie = 'affiliateos-mode=; path=/; max-age=0';
+                  document.cookie = 'affiliateos-user-name=; path=/; max-age=0';
+                  if (typeof window !== 'undefined') {
+                    localStorage.removeItem('affiliateos-profile-name');
+                  }
                 }}
                 className="text-xs text-rose-600 font-semibold hover:underline"
               >
@@ -646,10 +642,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={() => {
                     const finalName = editName.trim() || 'Hariharto Surya';
                     writeBrowserStorage('affiliateos-profile-name', finalName);
+                    if (typeof document !== 'undefined') {
+                      document.cookie = 'affiliateos-user-name=' + encodeURIComponent(finalName) + '; path=/; max-age=86400';
+                    }
                     toast.success(`Profil diperbarui sebagai ${finalName} (${editRole})`);
                     setProfileModalOpen(false);
+                    // trigger refresh so server layout reads updated cookie
+                    window.location.reload();
                   }}
-                  className="bg-blue-600 hover:bg-blue-500 text-white font-semibold"
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-semibold cursor-pointer"
                 >
                   Simpan Perubahan
                 </Button>

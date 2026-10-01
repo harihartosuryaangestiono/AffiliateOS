@@ -36,6 +36,7 @@ import { useWorkspace } from '@/components/layout/workspace-provider';
 import { money, sum, trend } from '@/lib/data/metrics';
 import { motion, AnimatePresence } from 'motion/react';
 import { usePrefersReducedMotion } from '@/lib/motion/reduced-motion';
+import { MagneticButton, MagneticLink } from '@/components/motion/magnetic-button';
 
 export function PlatformIcon({ market }: { market: string }) {
   if (market === 'TikTok') {
@@ -173,7 +174,8 @@ export function Dashboard() {
   const currentHour = now.getHours();
   const greetingTime =
     currentHour < 12 ? 'GOOD MORNING' : currentHour < 18 ? 'GOOD AFTERNOON' : 'GOOD EVENING';
-  const firstName = (name || 'Dinda Victoria').split(' ')[0].toUpperCase();
+  const resolvedName = (!name || name === 'Demo Operator') ? 'Hariharto Surya' : name;
+  const firstName = resolvedName.split(' ')[0].toUpperCase();
 
   // Period filtering calculation
   const days =
@@ -550,20 +552,56 @@ export function Dashboard() {
 
               {/* Tactile Primary and Secondary CTAs */}
               <div className="flex flex-wrap items-center gap-3 pt-3">
-                <Link
+                <MagneticLink
                   href="/campaigns?create=1"
                   className="h-9 px-4 rounded-full bg-[#2563EB] hover:bg-[#1D4ED8] hover:-translate-y-0.5 hover:shadow-md text-white text-xs font-semibold shadow-xs inline-flex items-center gap-2 transition-all active:scale-[0.985]"
                 >
                   <span className="text-sm font-bold leading-none">+</span>
                   <span>Create campaign</span>
-                </Link>
-                <Link
+                </MagneticLink>
+                <MagneticLink
                   href="/creators"
                   className="h-9 px-4 rounded-full bg-white hover:bg-[#F8FAFC] hover:-translate-y-0.5 hover:shadow-xs text-[#0F172A] border border-[#CBD5E1] text-xs font-semibold shadow-2xs inline-flex items-center gap-2 transition-all active:scale-[0.985]"
                 >
                   <Users size={14} className="text-[#64748B]" />
                   <span>Browse creators</span>
-                </Link>
+                </MagneticLink>
+                <MagneticButton
+                  type="button"
+                  onClick={() => {
+                    const aiBtn = document.querySelector('[aria-label="Tanya AI Copilot"]') as HTMLButtonElement | null;
+                    if (aiBtn) aiBtn.click();
+                  }}
+                  className="h-9 px-4 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg text-white text-xs font-semibold shadow-[0_4px_16px_rgba(37,99,235,0.35)] inline-flex items-center gap-2 transition-all active:scale-[0.985] group cursor-pointer"
+                >
+                  <Sparkles size={14} className="text-amber-300 group-hover:rotate-12 transition-transform" />
+                  <span>Ask AI Copilot</span>
+                  <kbd className="hidden sm:inline-block text-[10px] px-1.5 py-0.5 rounded bg-white/20 font-bold">⌘J</kbd>
+                </MagneticButton>
+              </div>
+
+              {/* Quick AI Prompts Bar */}
+              <div className="flex flex-wrap items-center gap-2 pt-2 text-[11px] text-[#475569]">
+                <span className="font-semibold text-blue-600 flex items-center gap-1">
+                  <Sparkles size={12} /> Tanya AI:
+                </span>
+                {[
+                  'Creator terbaik minggu ini?',
+                  'Prioritas Action Center hari ini?',
+                  'Ringkasan performa 9.9',
+                ].map((promptText, pIdx) => (
+                  <button
+                    key={pIdx}
+                    type="button"
+                    onClick={() => {
+                      const aiBtn = document.querySelector('[aria-label="Tanya AI Copilot"]') as HTMLButtonElement | null;
+                      if (aiBtn) aiBtn.click();
+                    }}
+                    className="px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-[#334155] border border-blue-200/80 hover:border-blue-400 hover:text-blue-700 transition-all text-[11px] shadow-2xs cursor-pointer active:scale-95"
+                  >
+                    {promptText}
+                  </button>
+                ))}
               </div>
             </div>
 

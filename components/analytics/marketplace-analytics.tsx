@@ -18,7 +18,7 @@ import {
   BarChart3,
   ShieldAlert,
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useWorkspace } from '@/components/layout/workspace-provider';
 import { computeMarketplaceAnalytics } from '@/lib/analytics/engine';
 import type { 
@@ -180,27 +180,47 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
                   {market} Analytics Intelligence
                 </h1>
 
-                {/* Sibling Marketplace Quick Switcher (Section 12 Continuity) */}
-                <div className="inline-flex items-center p-0.5 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-xs font-semibold">
+                {/* Sibling Marketplace Quick Switcher with Shared-Element Pill */}
+                <div className="inline-flex items-center p-0.5 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] text-xs font-semibold relative">
                   <Link
                     href="/shopee"
-                    className={`px-2.5 py-1 rounded-md transition-all ${
+                    className={`relative px-3 py-1 rounded-lg transition-all duration-150 active:scale-95 ${
                       isShopee
-                        ? 'bg-white text-amber-700 shadow-2xs font-bold'
+                        ? 'text-[#C2410C] font-bold'
                         : 'text-[#64748B] hover:text-[#0F172A]'
                     }`}
                   >
-                    Shopee
+                    {isShopee && (
+                      <motion.div
+                        layoutId="sibling-market-pill"
+                        className="absolute inset-0 bg-white rounded-lg shadow-2xs border border-[#FED7AA]"
+                        transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#EA580C]" />
+                      Shopee
+                    </span>
                   </Link>
                   <Link
                     href="/tiktok"
-                    className={`px-2.5 py-1 rounded-md transition-all ${
+                    className={`relative px-3 py-1 rounded-lg transition-all duration-150 active:scale-95 ${
                       !isShopee
-                        ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                        ? 'text-[#0F172A] font-bold'
                         : 'text-[#64748B] hover:text-[#0F172A]'
                     }`}
                   >
-                    TikTok
+                    {!isShopee && (
+                      <motion.div
+                        layoutId="sibling-market-pill"
+                        className="absolute inset-0 bg-white rounded-lg shadow-2xs border border-[#CBD5E1]"
+                        transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0F172A]" />
+                      TikTok
+                    </span>
                   </Link>
                 </div>
 
@@ -363,94 +383,103 @@ export function MarketplaceAnalytics({ market }: MarketplaceAnalyticsProps) {
             </div>
           </div>
 
-          {/* 6. TAB VIEW CONTENTS */}
-          <div className="space-y-6">
-            {activeTab === 'overview' && (
-              <div className="space-y-6">
-                {/* Hero Analytics Visual: Performance Trajectory */}
-                <TrendChart
-                  timeSeries={analytics.timeSeries}
-                  hasComparison={Boolean(analytics.comparisonPeriod)}
-                  currentLabel={analytics.currentPeriod.label}
-                  comparisonLabel={analytics.comparisonPeriod?.label}
-                />
+          {/* 6. TAB VIEW CONTENTS WITH LIQUID CROSSFADE */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-6"
+            >
+              {activeTab === 'overview' && (
+                <div className="space-y-6">
+                  {/* Hero Analytics Visual: Performance Trajectory */}
+                  <TrendChart
+                    timeSeries={analytics.timeSeries}
+                    hasComparison={Boolean(analytics.comparisonPeriod)}
+                    currentLabel={analytics.currentPeriod.label}
+                    comparisonLabel={analytics.comparisonPeriod?.label}
+                  />
 
-                {/* Side-by-Side Pareto Charts: Creators & Products */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  {/* Side-by-Side Pareto Charts: Creators & Products */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <ParetoChart
+                      pareto={analytics.creatorAnalytics.pareto}
+                      title="Creator Revenue Concentration"
+                      subtitle="Deterministic 80/20 against total relevant population GMV"
+                    />
+                    <ParetoChart
+                      pareto={analytics.productAnalytics.pareto}
+                      title="Product Revenue Concentration"
+                      subtitle="Deterministic 80/20 against total relevant population GMV"
+                    />
+                  </div>
+
+                  {/* Quick AI Preview */}
+                  <AIInsightsCard analytics={analytics} />
+                </div>
+              )}
+
+              {activeTab === 'creators' && (
+                <div className="space-y-6">
+                  <CreatorLeaderboards
+                    topByGmv={analytics.creatorAnalytics.topByGmv}
+                    topByOrders={analytics.creatorAnalytics.topByOrders}
+                    topGrowth={analytics.creatorAnalytics.topGrowth}
+                    largestDeclining={analytics.creatorAnalytics.largestDeclining}
+                    newlyActive={analytics.creatorAnalytics.newlyActive}
+                    losingMomentum={analytics.creatorAnalytics.losingMomentum}
+                    concentrationRisk={analytics.creatorAnalytics.concentrationRisk}
+                  />
                   <ParetoChart
                     pareto={analytics.creatorAnalytics.pareto}
-                    title="Creator Revenue Concentration"
-                    subtitle="Deterministic 80/20 against total relevant population GMV"
-                  />
-                  <ParetoChart
-                    pareto={analytics.productAnalytics.pareto}
-                    title="Product Revenue Concentration"
-                    subtitle="Deterministic 80/20 against total relevant population GMV"
+                    title="Creator 80/20 Concentration (Full Population GMV)"
+                    subtitle="Cumulative contribution against total marketplace affiliate revenue"
                   />
                 </div>
+              )}
 
-                {/* Quick AI Preview */}
-                <AIInsightsCard analytics={analytics} />
-              </div>
-            )}
+              {activeTab === 'products' && (
+                <div className="space-y-6">
+                  <ProductAnalyticsTable items={analytics.productAnalytics.items} />
+                  <ParetoChart
+                    pareto={analytics.productAnalytics.pareto}
+                    title="Product 80/20 Concentration (Full Population GMV)"
+                    subtitle="Cumulative contribution against total marketplace affiliate revenue"
+                  />
+                </div>
+              )}
 
-            {activeTab === 'creators' && (
-              <div className="space-y-6">
-                <CreatorLeaderboards
-                  topByGmv={analytics.creatorAnalytics.topByGmv}
-                  topByOrders={analytics.creatorAnalytics.topByOrders}
-                  topGrowth={analytics.creatorAnalytics.topGrowth}
-                  largestDeclining={analytics.creatorAnalytics.largestDeclining}
-                  newlyActive={analytics.creatorAnalytics.newlyActive}
-                  losingMomentum={analytics.creatorAnalytics.losingMomentum}
-                  concentrationRisk={analytics.creatorAnalytics.concentrationRisk}
-                />
-                <ParetoChart
-                  pareto={analytics.creatorAnalytics.pareto}
-                  title="Creator 80/20 Concentration (Full Population GMV)"
-                  subtitle="Cumulative contribution against total marketplace affiliate revenue"
-                />
-              </div>
-            )}
+              {activeTab === 'contribution' && (
+                <div className="space-y-6">
+                  <ContributionBreakdown contribution={analytics.contributionToChange} />
+                </div>
+              )}
 
-            {activeTab === 'products' && (
-              <div className="space-y-6">
-                <ProductAnalyticsTable items={analytics.productAnalytics.items} />
-                <ParetoChart
-                  pareto={analytics.productAnalytics.pareto}
-                  title="Product 80/20 Concentration (Full Population GMV)"
-                  subtitle="Cumulative contribution against total marketplace affiliate revenue"
-                />
-              </div>
-            )}
+              {activeTab === 'campaigns' && (
+                <div className="space-y-6">
+                  <BrandCampaignSection
+                    brands={analytics.brandAnalytics}
+                    campaigns={analytics.campaignAnalytics}
+                  />
+                </div>
+              )}
 
-            {activeTab === 'contribution' && (
-              <div className="space-y-6">
-                <ContributionBreakdown contribution={analytics.contributionToChange} />
-              </div>
-            )}
+              {activeTab === 'stock' && (
+                <div className="space-y-6">
+                  <StockCorrelationSection items={analytics.stockCorrelation} />
+                </div>
+              )}
 
-            {activeTab === 'campaigns' && (
-              <div className="space-y-6">
-                <BrandCampaignSection
-                  brands={analytics.brandAnalytics}
-                  campaigns={analytics.campaignAnalytics}
-                />
-              </div>
-            )}
-
-            {activeTab === 'stock' && (
-              <div className="space-y-6">
-                <StockCorrelationSection items={analytics.stockCorrelation} />
-              </div>
-            )}
-
-            {activeTab === 'ai' && (
-              <div className="space-y-6">
-                <AIInsightsCard analytics={analytics} />
-              </div>
-            )}
-          </div>
+              {activeTab === 'ai' && (
+                <div className="space-y-6">
+                  <AIInsightsCard analytics={analytics} />
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </>
       )}
     </div>

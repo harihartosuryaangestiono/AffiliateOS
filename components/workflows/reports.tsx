@@ -26,11 +26,9 @@ import {
   TrendingDown,
   Layers,
   Calendar,
-  ArrowRight,
   FileBarChart2,
   FileText,
   Check,
-  Share2,
 } from 'lucide-react';
 import { generateComparisonPPTX } from '@/lib/reporting/comparison-export';
 
@@ -433,8 +431,9 @@ export function CompareReportStudio({ monthly = false }: { monthly?: boolean }) 
                 {/* Date Inputs */}
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label className="text-[11px] font-semibold text-[#64748B] block mb-1">Mulai Dari</label>
+                    <label htmlFor="primary-start-date" className="text-[11px] font-semibold text-[#64748B] block mb-1">Mulai Dari</label>
                     <input
+                      id="primary-start-date"
                       type="date"
                       value={primaryStart}
                       onChange={(e) => {
@@ -445,8 +444,9 @@ export function CompareReportStudio({ monthly = false }: { monthly?: boolean }) 
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-[#64748B] block mb-1">Sampai Dengan</label>
+                    <label htmlFor="primary-end-date" className="text-[11px] font-semibold text-[#64748B] block mb-1">Sampai Dengan</label>
                     <input
+                      id="primary-end-date"
                       type="date"
                       value={primaryEnd}
                       onChange={(e) => {
@@ -508,8 +508,9 @@ export function CompareReportStudio({ monthly = false }: { monthly?: boolean }) 
                 {/* Date Inputs */}
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label className="text-[11px] font-semibold text-[#64748B] block mb-1">Mulai Dari</label>
+                    <label htmlFor="compare-start-date" className="text-[11px] font-semibold text-[#64748B] block mb-1">Mulai Dari</label>
                     <input
+                      id="compare-start-date"
                       type="date"
                       value={compareStart}
                       onChange={(e) => {
@@ -520,8 +521,9 @@ export function CompareReportStudio({ monthly = false }: { monthly?: boolean }) 
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-[#64748B] block mb-1">Sampai Dengan</label>
+                    <label htmlFor="compare-end-date" className="text-[11px] font-semibold text-[#64748B] block mb-1">Sampai Dengan</label>
                     <input
+                      id="compare-end-date"
                       type="date"
                       value={compareEnd}
                       onChange={(e) => {

@@ -78,3 +78,36 @@ export const MOTION_DELAYS = {
   staggerStandard: 0.05, // 50ms between cards
   heroDelay: 0.08,
 } as const;
+
+/**
+ * Phase 2.9 Central Motion Architecture Primitive
+ */
+export const motionTokens = {
+  duration: {
+    instant: 0.1,
+    fast: 0.16,
+    normal: 0.22,
+    expressive: 0.35,
+    cinematic: 0.6,
+  },
+  easing: {
+    standard: [0.16, 1, 0.3, 1] as const,
+    enter: [0.16, 1, 0.3, 1] as const,
+    exit: [0.55, 0.085, 0.68, 0.53] as const,
+    emphasized: [0.2, 0, 0, 1] as const,
+    spring: 'spring' as const,
+  },
+  spring: {
+    soft: { type: 'spring' as const, stiffness: 280, damping: 24, mass: 1 },
+    responsive: { type: 'spring' as const, stiffness: 450, damping: 32, mass: 0.8 },
+    expressive: { type: 'spring' as const, stiffness: 350, damping: 26, mass: 1 },
+    magnetic: { type: 'spring' as const, stiffness: 500, damping: 22, mass: 0.7 },
+  },
+  distance: {
+    micro: 2,
+    small: 6,
+    medium: 12,
+    large: 24,
+  },
+} as const;
+

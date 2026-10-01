@@ -164,3 +164,101 @@ export const badgePopVariants: Variants = {
   },
   exit: { scale: 0.85, opacity: 0, transition: { duration: 0.08 } },
 };
+
+/**
+ * Phase 2.9: Cinematic Route Workspace Transition
+ * Preserves shell stability while content glides with scale, blur, and lift.
+ */
+export const cinematicRouteVariants: Variants = {
+  initial: {
+    opacity: 0,
+    y: 10,
+    scale: 0.995,
+    filter: 'blur(4px)',
+  },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: {
+      duration: MOTION_DURATIONS.page,
+      ease: MOTION_EASINGS.easeOutExpo,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -6,
+    scale: 0.995,
+    filter: 'blur(3px)',
+    transition: {
+      duration: MOTION_DURATIONS.fast,
+      ease: MOTION_EASINGS.easeInQuad,
+    },
+  },
+};
+
+/**
+ * Phase 2.9: Dashboard Hero Choreography Variants
+ */
+export const heroChoreographyContainer: Variants = {
+  initial: {},
+  animate: {
+    transition: {
+      delayChildren: 0.04,
+    },
+  },
+};
+
+export const heroChoreographyItem: Variants = {
+  initial: {
+    opacity: 0,
+    y: 12,
+  },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.28,
+      ease: MOTION_EASINGS.easeOutExpo,
+    },
+  },
+};
+
+/**
+ * Phase 2.9: Pareto Chart Bar Sequential Rise
+ */
+export const paretoBarVariants: Variants = {
+  initial: {
+    scaleY: 0,
+    opacity: 0,
+    transformOrigin: 'bottom',
+  },
+  animate: (i: number) => ({
+    scaleY: 1,
+    opacity: 1,
+    transformOrigin: 'bottom',
+    transition: {
+      delay: i * 0.035,
+      duration: 0.32,
+      ease: MOTION_EASINGS.easeOutExpo,
+    },
+  }),
+};
+
+/**
+ * Phase 2.9: AI Gemini Pulse & Shimmer
+ */
+export const aiSparkleVariants: Variants = {
+  initial: { rotate: 0, scale: 1 },
+  animate: {
+    rotate: [0, 15, -12, 0],
+    scale: [1, 1.1, 0.96, 1],
+    transition: {
+      repeat: Infinity,
+      duration: 3.6,
+      ease: 'easeInOut',
+    },
+  },
+};
+

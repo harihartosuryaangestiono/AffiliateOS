@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { pageVariants } from '@/lib/motion/variants';
+import { cinematicRouteVariants } from '@/lib/motion/variants';
 import { usePrefersReducedMotion } from '@/lib/motion/reduced-motion';
 
 interface RouteTransitionProps {
@@ -25,7 +25,7 @@ export function RouteTransition({ children, pathname }: RouteTransitionProps) {
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={pathname}
-        variants={pageVariants}
+        variants={cinematicRouteVariants}
         initial="initial"
         animate="animate"
         exit="exit"

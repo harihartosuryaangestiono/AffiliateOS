@@ -120,3 +120,53 @@ void test('7. Motion System: Reduced Motion is safely resolved server-side witho
   assert.equal(typeof result, 'boolean');
   assert.equal(result, false);
 });
+
+void test('8. Phase 2.9 Motion Tokens: Primitives conform to duration, easing, spring, and distance tokens', async () => {
+  const { motionTokens } = await import('../lib/motion/tokens.ts');
+  assert.ok(motionTokens.duration.instant <= 0.12);
+  assert.ok(motionTokens.duration.fast <= 0.18);
+  assert.ok(motionTokens.duration.normal <= 0.25);
+  assert.ok(motionTokens.duration.expressive <= 0.4);
+  assert.ok(motionTokens.duration.cinematic <= 0.7);
+
+  assert.equal(motionTokens.spring.responsive.type, 'spring');
+  assert.ok(motionTokens.spring.responsive.stiffness >= 400);
+  assert.ok(motionTokens.spring.magnetic.stiffness >= 450);
+
+  assert.equal(motionTokens.distance.micro, 2);
+  assert.equal(motionTokens.distance.small, 6);
+  assert.equal(motionTokens.distance.medium, 12);
+  assert.equal(motionTokens.distance.large, 24);
+});
+
+void test('9. Phase 2.9 Cinematic Route Variants: Correct scale, blur, and opacity choreography', async () => {
+  const { cinematicRouteVariants } = await import('../lib/motion/variants.ts');
+  const initial = cinematicRouteVariants.initial as Record<string, unknown>;
+  assert.equal(initial.opacity, 0);
+  assert.equal(initial.y, 10);
+  assert.equal(initial.scale, 0.995);
+  assert.equal(initial.filter, 'blur(4px)');
+
+  const animate = cinematicRouteVariants.animate as Record<string, unknown>;
+  assert.equal(animate.opacity, 1);
+  assert.equal(animate.y, 0);
+  assert.equal(animate.scale, 1);
+  assert.equal(animate.filter, 'blur(0px)');
+
+  const exit = cinematicRouteVariants.exit as Record<string, unknown>;
+  assert.equal(exit.opacity, 0);
+  assert.equal(exit.y, -6);
+  assert.equal(exit.scale, 0.995);
+  assert.equal(exit.filter, 'blur(3px)');
+});
+
+void test('10. Phase 2.9 AI Motion Language: aiSparkleVariants and hero choreography timing', async () => {
+  const { aiSparkleVariants, heroChoreographyContainer, paretoBarVariants } = await import('../lib/motion/variants.ts');
+  assert.ok(aiSparkleVariants.animate);
+  assert.ok(heroChoreographyContainer.animate);
+  assert.ok(typeof paretoBarVariants.animate === 'function');
+  const barMotion = (paretoBarVariants.animate as (i: number) => Record<string, unknown>)(2);
+  assert.equal(barMotion.scaleY, 1);
+  assert.equal(barMotion.opacity, 1);
+});
+
