@@ -12,15 +12,35 @@ import {
 import { entities, type Entity } from '@/types/domain';
 import { ActionCenter } from '@/components/workflows/action-center';
 import { CommunicationWorkspace } from '@/components/workflows/communication';
+import { Acquisition } from '@/components/workflows/creators';
+import { Deals } from '@/components/workflows/deals';
+
 export default async function Page({
   params,
   searchParams,
 }: {
   params: Promise<{ module: string }>;
-  searchParams: Promise<{ create?: string }>;
+  searchParams: Promise<{ create?: string; filter?: string; view?: string }>;
 }) {
   const { module } = await params;
   const query = await searchParams;
+
+  // Dedicated Creator Acquisition Funnel
+  if (
+    module === 'acquisition' ||
+    (module === 'creators' && query.filter === 'acquisition')
+  ) {
+    return <Acquisition />;
+  }
+
+  // Dedicated Campaign Deals & Creator Locks
+  if (
+    module === 'deals' ||
+    (module === 'campaigns' && query.view === 'deals')
+  ) {
+    return <Deals />;
+  }
+
   if (entities.includes(module as Entity))
     return (
       <EntityTable

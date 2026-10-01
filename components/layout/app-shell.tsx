@@ -101,7 +101,7 @@ const groups: {
     name: 'CREATORS',
     items: [
       ['Creator Database', 'creators', Users],
-      ['Acquisition', 'creators?filter=acquisition', Plus],
+      ['Acquisition', 'acquisition', Plus],
       ['Outreach', 'communication', MessageCircle],
     ],
   },
@@ -109,7 +109,7 @@ const groups: {
     name: 'CAMPAIGNS & ACTIVATIONS',
     items: [
       ['Campaigns', 'campaigns', Flag],
-      ['Deals', 'campaigns?view=deals', Handshake],
+      ['Deals', 'deals', Handshake],
       ['Samples', 'samples', PackageCheck],
       ['Content & Logs', 'hsl', FileText],
       ['Peak Days', 'peak-days', CalendarDays],
@@ -128,7 +128,9 @@ const groups: {
 const quickActions = [
   ['Report', '/reports?create=1'],
   ['Creator', '/creators?create=1'],
+  ['Acquisition Prospect', '/acquisition?create=1'],
   ['Campaign', '/campaigns?create=1'],
+  ['Deal Lock', '/deals?create=1'],
   ['Task', '/tasks?create=1'],
   ['Client', '/clients?create=1'],
   ['Brand', '/brands?create=1'],
@@ -179,7 +181,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           ? canOperate(role, 'hsl_activations')
           : target === '/peak-days'
             ? canOperate(role, 'peak_days')
-            : canEdit(target.slice(1) as 'creators' | 'campaigns' | 'tasks');
+            : target === '/deals'
+              ? canOperate(role, 'campaign_creators')
+              : target === '/acquisition'
+                ? canEdit('creators')
+                : canEdit(target.slice(1) as 'creators' | 'campaigns' | 'tasks');
   });
 
   const pendingTasks = data.entities.tasks.filter(
@@ -263,7 +269,21 @@ export function AppShell({ children }: { children: ReactNode }) {
                         .some((i) => i[1] !== rawUrl && path === '/' + i[1].split('?')[0]));
 
                   let isActive = false;
-                  if (urlQuery) {
+                  if (rawUrl === 'acquisition') {
+                    isActive =
+                      path === '/acquisition' ||
+                      (path === '/creators' && currentQuery.includes('filter=acquisition'));
+                  } else if (rawUrl === 'creators') {
+                    isActive =
+                      path === '/creators' && !currentQuery.includes('filter=acquisition');
+                  } else if (rawUrl === 'deals') {
+                    isActive =
+                      path === '/deals' ||
+                      (path === '/campaigns' && currentQuery.includes('view=deals'));
+                  } else if (rawUrl === 'campaigns') {
+                    isActive =
+                      path === '/campaigns' && !currentQuery.includes('view=deals');
+                  } else if (urlQuery) {
                     isActive = isExactBase && currentQuery.includes(urlQuery);
                   } else {
                     const siblingHasQueryMatch = g.items.some(
@@ -496,6 +516,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   'Create ' + label,
                   url,
                 ]),
+                ['Open Creator Acquisition Funnel', '/acquisition'],
+                ['Open Creator Deals & Locks', '/deals'],
                 ['Open Reports & Compare', '/reports'],
                 ['Open Action Center', '/actions'],
                 ['Open My Work', '/my-work'],
